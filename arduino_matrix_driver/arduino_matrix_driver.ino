@@ -17,61 +17,84 @@
 #define PIXEL_SIZE 3
 // Bytes per frame buffer
 #define BUFFER_SIZE (PIXEL_COUNT * PIXEL_SIZE)
-// Pins that connect to the WS2801 string
-#define WS2801_DATA 2
-#define WS2801_CLOCK 3
+// Pins that connect to the WS2801 string (must be on PORTD)
+#define WS2801_DATA PORTD2
+#define WS2801_CLOCK PORTD4
 
 // LED control
 Adafruit_WS2801 strip = Adafruit_WS2801(PIXEL_COUNT, WS2801_DATA, WS2801_CLOCK);
 
-struct Pixel {
-  unsigned char r, g, b;
-};
+// quickly (6.25ms) bit-bang 900 bytes into the ws2801 strip
+void fast_show() {
+/*
+  uint8_t clkpinmask  = digitalPinToBitMask(clockPin);
+  uint8_t datapinmask = digitalPinToBitMask(dataPin);
+  uint8_t resetmask = ~(clkpinmask | datapinmask);
+*/
+#define clkpinmask 0x10
+#define datapinmask 0x04
+//#define resetmask 0xeb
 
-struct VideoFrame {
-  Pixel pixels[PIXEL_COUNT];
-};
+  for (uint8_t *stop_ptr = strip.pixels + strip.numPixels() * 3,  *pixel = strip.pixels; pixel != stop_ptr; ++pixel) {
+    uint8_t pixel_value = *pixel;
+//#define BANG_WS2801_BIT(bit) PORTD = (PORTD & resetmask) | (pixel_value & bit ? datapinmask : 0); PORTD |= clkpinmask // this results in some odd flickering - too fast?
+#define BANG_WS2801_BIT(bit) if (pixel_value & bit) PORTD |= datapinmask; else PORTD &= ~datapinmask; PORTD |= clkpinmask; PORTD &= ~clkpinmask
+    BANG_WS2801_BIT(0x80);
+    BANG_WS2801_BIT(0x40);
+    BANG_WS2801_BIT(0x20);
+    BANG_WS2801_BIT(0x10);
+    BANG_WS2801_BIT(0x08);
+    BANG_WS2801_BIT(0x04);
+    BANG_WS2801_BIT(0x02);
+    BANG_WS2801_BIT(0x01);
+  }
 
-// current video frame (being read from UART0)
-VideoFrame g_serial_frame_buffer;
-// current position in frame
-unsigned short g_serial_frame_buffer_pos;
-
-void setup() {
-  // serial comms with NSLU2
-  Serial.begin(500000);
-  // serial port input frame buffer
-  g_serial_frame_buffer_pos = 0;
-  // parallel comms with coprocessor
-  DDRC |= 0x07; // Set PC0-2 as digital out (PC0-2 are low 3 bits for comms with coprocessor)
-  DDRD |= 0xfc; // Set PD2-7 as digital out (PD2 to trigger interrupt on coprocessor, and PD3-7 are high 5 bits for comms with coprocessor)
-  // debug
-  Serial.print("UBRR ");
-  Serial.print(UBRR0H, HEX);
-  Serial.print(" ");
-  Serial.print(UBRR0L, HEX);
-  Serial.print("\n");
-  // ready!
-  Serial.print("OK\n");
-  
-  // set LEDs weakly on in R/G/B pattern.
+  delay(1);
 }
 
-// write a byte to the coprocessor on PC0-2 + PD3-7, and toggle PD2 (INT0 on coprocessor)
-void write_to_coprocessor(unsigned char d) {
-  PORTC = PORTC & 0xf8 | (d & 0x07);
-  PORTD = ((PORTD ^ 0x04) & 0x07) | (d & 0xf8);
+void setup() {
+  // serial comms with host laptop
+//  Serial.begin(500000);
+  Serial.begin(115200);
+  // ready!
+  Serial.print("OK.\n");
+
+  // set LEDs weakly on in R/G/B pattern.
+  strip.begin();
+  uint8_t c = random(0, 255);
+  for (uint8_t y = 0; y < HEIGHT; ++y) {
+    for (uint8_t x = 0; x < WIDTH; ++x) {
+      strip.setPixelColor(y * WIDTH + x, (x + y + c) % 24, (x + y + c + 8) % 24, (x + y + c + 16) % 24);
+    }
+  }
+  fast_show();
 }
 
 void loop() {
+  static uint8_t header_pos = 0;
+  static uint16_t current_pixel = 0;
   while (Serial.available()) {
-    if (g_serial_frame_buffer_pos < BUFFER_SIZE) {
-      *((unsigned char *)&g_serial_frame_buffer.pixels + g_serial_frame_buffer_pos) = (unsigned char)Serial.read();
-      if (++g_serial_frame_buffer_pos == BUFFER_SIZE) {
+    // are we overflowing the buffer on the arduino?  send something when we start the loop / first time we get something on serial after a quiet spell?
+    if (header_pos < 4) {
+      if (Serial.read() == (header_pos < 2 ? '*' : '+')) ++header_pos;
+      Serial.println(header_pos, DEC);
+      if (header_pos == 4) {
+        current_pixel = 0;
+      }
+    } else if (current_pixel < BUFFER_SIZE) {
+      while (Serial.available() && current_pixel < BUFFER_SIZE) {
+        strip.pixels[current_pixel++] = (uint8_t)Serial.read();
+//        if (!(current_pixel % 100)) { Serial.println(current_pixel, DEC); }
+      }
+    
+      if (current_pixel == BUFFER_SIZE) {
+        Serial.println("frame!");
+        fast_show();
         digitalWrite(LED, !digitalRead(LED));
-        g_serial_frame_buffer_pos = 0;
-        Serial.print("got "); Serial.print(BUFFER_SIZE); Serial.println(" byte frame");
-        Serial.print("OK\n");
+        header_pos = 0;
+        current_pixel = 0;
+        Serial.print("\ngot "); Serial.print(BUFFER_SIZE); Serial.println(" byte frame");
+        Serial.print("OK.\n");
       }
     }
   }
