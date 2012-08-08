@@ -9,6 +9,9 @@
 // Duemilanove has an LED on pin 13 
 #define LED 13
 
+// comms speed
+#define BAUD 1000000
+
 // Display dimensions
 #define WIDTH 25
 #define HEIGHT 12
@@ -52,12 +55,28 @@ void fast_show() {
   delay(1);
 }
 
+#define serial_available() (UCSR0A & (1<<RXC0))
+#define serial_read() (UDR0)
+#define serial_can_write() (
+
+void serial_write(uint8_t c) {
+  while (!(UCSR0A & (1 << UDRE0)));
+  UDR0 = c;
+}
+
+void serial_print(const char* s) {
+  for (; *s; s++) {
+    while (!(UCSR0A & (1 << UDRE0)));
+    UDR0 = *s;
+  }
+}
+
 void setup() {
   // serial comms with host laptop
-//  Serial.begin(500000);
-  Serial.begin(115200);
-  // ready!
-  Serial.print("OK.\n");
+  //Serial.begin(BAUD);
+  // disable serial rx interrupt - we'll deal with that ourselves
+  //unsigned char ucsr0b_udrie0 = UCSR0B & (1 << UDRIE0); // stash current state
+  //UCSR0B &= ~(1 << UDRIE0);
 
   // set LEDs weakly on in R/G/B pattern.
   strip.begin();
@@ -68,34 +87,40 @@ void setup() {
     }
   }
   fast_show();
+
+  UCSR0A |= 1<<U2X0;
+  UCSR0B |= (1<<RXEN0 | 1<<TXEN0);
+  uint16_t divider = (F_CPU / 4 / BAUD - 1) / 2;
+  UBRR0H = divider >> 8;
+  UBRR0L = divider & 0xFF;
+
+  // say hello
+  UDR0 = '*';
+
+  // ready!
+  serial_print("_OK.\n");
 }
 
 void loop() {
   static uint8_t header_pos = 0;
-  static uint16_t current_pixel = 0;
-  while (Serial.available()) {
-    // are we overflowing the buffer on the arduino?  send something when we start the loop / first time we get something on serial after a quiet spell?
-    if (header_pos < 4) {
-      if (Serial.read() == (header_pos < 2 ? '*' : '+')) ++header_pos;
-      Serial.println(header_pos, DEC);
-      if (header_pos == 4) {
-        current_pixel = 0;
-      }
-    } else if (current_pixel < BUFFER_SIZE) {
-      while (Serial.available() && current_pixel < BUFFER_SIZE) {
-        strip.pixels[current_pixel++] = (uint8_t)Serial.read();
-//        if (!(current_pixel % 100)) { Serial.println(current_pixel, DEC); }
-      }
-    
-      if (current_pixel == BUFFER_SIZE) {
-        Serial.println("frame!");
-        fast_show();
-        digitalWrite(LED, !digitalRead(LED));
-        header_pos = 0;
-        current_pixel = 0;
-        Serial.print("\ngot "); Serial.print(BUFFER_SIZE); Serial.println(" byte frame");
-        Serial.print("OK.\n");
-      }
+  while (header_pos < 4) {
+    while (!serial_available());
+    if (serial_read() == (header_pos < 2 ? '*' : '+')) {
+      ++header_pos;
     }
   }
+  serial_print("#");
+  static uint16_t current_pixel = 0;
+  while (current_pixel < BUFFER_SIZE) {
+    while (!serial_available());
+    strip.pixels[current_pixel++] = (uint8_t)serial_read();
+    //if (!(current_pixel % 100)) { Serial.println(current_pixel, DEC); }
+  }
+
+  //strip.show();
+  fast_show();
+  digitalWrite(LED, !digitalRead(LED));
+  header_pos = 0;
+  current_pixel = 0;
+  serial_print("OK.\n");
 }

@@ -1,5 +1,5 @@
 matrix_daemon: matrix_daemon.c
-	g++ -o $@ $<
+	g++ -g -o $@ $<
 
 test: matrix_daemon
 	./matrix_daemon
