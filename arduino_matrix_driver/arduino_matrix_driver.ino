@@ -11,6 +11,7 @@
 
 // comms speed
 #define BAUD 1000000
+//#define BAUD 115200
 
 // Display dimensions
 #define WIDTH 25

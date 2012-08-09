@@ -4,8 +4,10 @@
 
 #include "matrix_daemon.h"
 
+#include <termios.h>
+
 int portfd;
-int debuglevel = 2;
+int debuglevel = 1;
 
 int setup_serial(const char* port_path) {
   int fd;
@@ -101,12 +103,40 @@ int millitime(void) {
 }
 
 struct Frame {
-  unsigned char buffer[LEN * 3];
+  int w, h;
+  size_t buffer_len;
+  unsigned char *buffer;
+  Frame(int _w, int _h) {
+    w = _w;
+    h = _h;
+    buffer_len = w * h * 3;
+    buffer = (unsigned char*)malloc(buffer_len);
+    if (!buffer) {
+      printf("unable to allocate %d bytes for frame buffer\n", (int)buffer_len);
+      exit(1);
+    }
+  }
+  // clear screen
   void blank() {
-    for (int i = 0; i < LEN * 3; ++i) buffer[i] = 0;
+    bzero(buffer, buffer_len);
+  }
+  int pos_from_xy(int x, int y) {
+    return y * WIDTH + (y & 1 ? (25 - x) : x);
+  }
+  // set entire frame at once, from a buffer in column format that isn't aware of the pixel layout
+  void set_from_vertical_buffer(const unsigned char *buf) {
+    int i = 0;
+    for (int x = 0; x < WIDTH; ++x) {
+      for (int y = 0; y < HEIGHT; ++y) {
+	unsigned char* ptr = buffer + pos_from_xy(x, y) * 3;
+	*ptr++ = buf[i++];
+	*ptr++ = buf[i++];
+	*ptr++ = buf[i++];
+      }
+    }
   }
   void set(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
-    int pos = y * WIDTH + (y & 1 ? (25 - x) : x);
+    int pos = pos_from_xy(x, y);
     buffer[pos * 3] = r;
     buffer[pos * 3 + 1] = g;
     buffer[pos * 3 + 2] = b;
@@ -129,12 +159,14 @@ int main(int argc, char *argv[]) {
   int buf_size = 1024;
   unsigned char buf[buf_size];
   unsigned int total_bytes_sent = 0;
-  Frame frame;
+  Frame frame(WIDTH, HEIGHT);
   int n_frame;
   int start_millis = millitime();
   int last_frame_start_millis = start_millis;
   std::deque<unsigned char> input;
   const char* preamble = "OK.";
+
+  int in_udp_mode = 0;
 
   printf("Want It! matrix display (C) 2012 Phillip Pearson, pp@myelin.co.nz\n");
 
@@ -144,22 +176,24 @@ int main(int argc, char *argv[]) {
   }
 
   portfd = setup_serial(argv[1]);
+  setup_udp();
 
   //test_loop_corruption();
 
   for (n_frame = 0; ; ++n_frame) {
     int frame_start_millis = millitime();
     int ready_for_next = 0;
-    int preamble_read_pos = 0;
+    size_t preamble_read_pos = 0;
     int ms_since_start = frame_start_millis - start_millis;
     int bytes_per_sec = ms_since_start ? (total_bytes_sent * 1000 / ms_since_start) : 0;
+    int ms_per_frame = frame_start_millis - last_frame_start_millis;
     if (debuglevel >= 1) {
-      printf("%d ms since last frame / %d bytes in %d ms / %d bytes/sec (%d baud)\n",
-	     frame_start_millis - last_frame_start_millis,
+      printf("%d ms since last frame / %d bytes in %d ms / %d bytes/sec / %.1f fps\n",
+	     ms_per_frame,
 	     total_bytes_sent,
 	     ms_since_start,
 	     bytes_per_sec,
-	     bytes_per_sec * 10);
+	     1000.0 / ms_per_frame);
     }
     last_frame_start_millis = frame_start_millis;
 
@@ -209,7 +243,31 @@ int main(int argc, char *argv[]) {
     //frame.rect(0, 0, WIDTH, HEIGHT, rand() % 256, rand() % 256, rand() % 256);
     frame.set(n_frame % LEN, 0, 0xff, 0xff, 0xff); //rand() & 0xff, rand() & 0xff, rand() & 0xff);
 
-    if (debuglevel >= 1) printf("Sending test frame %d\n", n_frame);
+    // see if someone sent us something over UDP (Disorient protocol / Processing interface)
+    unsigned char udp_buffer[frame.buffer_len];
+    int received_udp_frame = check_udp(udp_buffer, frame.buffer_len);
+    if (received_udp_frame) {
+      // received a udp frame -- disable internal pattern generation for now
+      in_udp_mode = 1;
+    } else if (in_udp_mode && !received_udp_frame) {
+      // expecting a udp frame - wait for up to a second, and if we don't get anything, drop back into internal mode
+      if (debuglevel > 5) printf("waiting for a bit to see if we'll get a udp frame\n");
+      in_udp_mode = 0;
+      for (int udp_try = 0; udp_try < 1000; ++udp_try) {
+	usleep(1000); // 1 ms
+	received_udp_frame = check_udp(udp_buffer, frame.buffer_len);
+	if (received_udp_frame) {
+	  in_udp_mode = 1;
+	  break;
+	}
+      }
+    }
+    if (received_udp_frame) frame.set_from_vertical_buffer(udp_buffer);
+
+    // clear out any excess udp frames
+    while (check_udp(NULL, 0)) printf("skipped too-fast UDP frame\n");
+
+    if (debuglevel >= 1) printf("Sending frame %d%s\n", n_frame, in_udp_mode ? " (UDP)" : "");
     //set_blocking(1);
     buf[0] = buf[1] = '*';
     buf[2] = buf[3] = '+';
