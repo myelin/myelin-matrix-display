@@ -87,7 +87,13 @@ int setup_serial(const char* port_path) {
   options.c_oflag = 0; // &= ~OPOST; // make raw
 
   // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
-  options.c_cc[VMIN]  = 255;
+  options.c_cc[VMIN]  =
+#ifdef __linux__
+    255
+#else
+    1
+#endif
+    ;
   options.c_cc[VTIME] = 10;
 
   // set termios options
@@ -235,11 +241,12 @@ int main(int argc, char *argv[]) {
     int ms_since_start = frame_start_millis - start_millis;
     int bytes_per_sec = ms_since_start ? (total_bytes_sent * 1000 / ms_since_start) : 0;
     if (debuglevel >= 1) {
-      printf("%d ms since last frame / %d bytes in %d ms / %d bytes/sec\n",
+      printf("%d ms since last frame / %d bytes in %d ms / %d bytes/sec (%d baud)\n",
 	     frame_start_millis - last_frame_start_millis,
 	     total_bytes_sent,
 	     ms_since_start,
-	     bytes_per_sec);
+	     bytes_per_sec,
+	     bytes_per_sec * 10);
     }
     last_frame_start_millis = frame_start_millis;
 
