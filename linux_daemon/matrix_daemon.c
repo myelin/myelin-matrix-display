@@ -124,10 +124,10 @@ struct Frame {
     return y * WIDTH + (y & 1 ? (25 - x) : x);
   }
   // set entire frame at once, from a buffer in column format that isn't aware of the pixel layout
-  void set_from_vertical_buffer(const unsigned char *buf) {
+  void set_from_buffer(const unsigned char *buf) {
     int i = 0;
-    for (int x = 0; x < WIDTH; ++x) {
-      for (int y = 0; y < HEIGHT; ++y) {
+    for (int y = 0; y < HEIGHT; ++y) {
+      for (int x = 0; x < WIDTH; ++x) {
 	unsigned char* ptr = buffer + pos_from_xy(x, y) * 3;
 	*ptr++ = buf[i++];
 	*ptr++ = buf[i++];
@@ -262,7 +262,7 @@ int main(int argc, char *argv[]) {
 	}
       }
     }
-    if (received_udp_frame) frame.set_from_vertical_buffer(udp_buffer);
+    if (received_udp_frame) frame.set_from_buffer(udp_buffer);
 
     // clear out any excess udp frames
     while (check_udp(NULL, 0)) printf("skipped too-fast UDP frame\n");
