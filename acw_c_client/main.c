@@ -34,11 +34,11 @@ void send_to_display(unsigned char* buffer, int buffer_len) {
 
   // send udp frame to emulator on localhost
   inet_aton("127.0.0.1", &addr.sin_addr); // localhost
-  sendto(udp_fd, output, expected_len, 0, (const struct sockaddr *)&addr, sizeof(addr));
+  sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
 
   // and to want it! matrix
   inet_aton("192.168.1.78", &addr.sin_addr); // localhost
-  sendto(udp_fd, output, expected_len, 0, (const struct sockaddr *)&addr, sizeof(addr));
+  sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
 }
 
 extern void draw_frame(int frame);
@@ -68,6 +68,20 @@ void rect(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsi
 
 void rect(int x0, int y0, int x1, int y1, int c) {
   rect(x0, y0, x1, y1, (unsigned char)(c >> 16), (unsigned char)(c >> 8), (unsigned char)c);
+}
+
+int random_color() {
+  return rand() & 0xFFFFFF;
+}
+
+int color_fade(int color1, int color2, int pos) {
+  int r1 = (color1 >> 16) & 0xFF, g1 = (color1 >> 8) & 0xFF, b1 = color1 & 0xFF;
+  int r2 = (color2 >> 16) & 0xFF, g2 = (color2 >> 8) & 0xFF, b2 = color2 & 0xFF;
+
+  int antipos = 255 - pos;
+  int r = (r1 * antipos + r2 * pos) / 510, g = (g1 * antipos + g2 * pos) / 510, b = (b1 * antipos + b2 * pos) / 510;
+
+  return (r << 16) | (g << 8) | b;
 }
 
 void blank() {

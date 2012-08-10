@@ -1,5 +1,5 @@
 CFILES=main.c
-PROJECTS=fade white epilepsy
+PROJECTS=fade white epilepsy bounce chill
 DEPS=
 
 all: $(PROJECTS)

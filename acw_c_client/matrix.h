@@ -14,3 +14,5 @@
 extern void blank();
 extern void rect(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b);
 extern void rect(int x0, int y0, int x1, int y1, int c);
+extern int random_color();
+extern int color_fade(int color1, int color2, int pos);
