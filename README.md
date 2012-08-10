@@ -22,7 +22,8 @@ allowing more complex patterns.
 
 For extra flexibility, the linux_daemon code also supports the UDP
 protocol used by Disorient's Art Car Wash code, allowing a Processing
-app anywhere on the network to control the system.
+app, or any of the targets in the acw_c_client folder, to control the
+system anywhere on the network.
 
 Programming patterns
 --------------------
