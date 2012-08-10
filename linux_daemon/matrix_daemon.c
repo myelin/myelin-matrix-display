@@ -121,7 +121,7 @@ struct Frame {
     bzero(buffer, buffer_len);
   }
   int pos_from_xy(int x, int y) {
-    return y * WIDTH + (y & 1 ? (25 - x) : x);
+    return y * WIDTH + (y & 1 ? (24 - x) : x);
   }
   // set entire frame at once, from a buffer in column format that isn't aware of the pixel layout
   void set_from_buffer(const unsigned char *buf) {
