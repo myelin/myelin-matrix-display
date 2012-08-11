@@ -9,7 +9,8 @@
 #define RGB 1
 #define FRAMERATE 30
 
-#define BUF_SIZE (WIDTH * HEIGHT * (RGB ? 3 : 1))
+#define PIXEL_COUNT (WIDTH * HEIGHT)
+#define BUF_SIZE (PIXEL_COUNT * (RGB ? 3 : 1))
 
 extern void blank();
 extern void dim(int factor);
