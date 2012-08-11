@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
     int ready_for_next = 0;
     size_t preamble_read_pos = 0;
     int ms_since_start = frame_start_millis - start_millis;
-    int bytes_per_sec = ms_since_start ? (total_bytes_sent * 1000 / ms_since_start) : 0;
+    int bytes_per_sec = ms_since_start ? (int)((double)total_bytes_sent * 1000 / ms_since_start) : 0;
     int ms_per_frame = frame_start_millis - last_frame_start_millis;
     if (debuglevel >= 1) {
       printf("%d ms since last frame / %d bytes in %d ms / %d bytes/sec / %.1f fps\n",
@@ -202,6 +202,7 @@ int main(int argc, char *argv[]) {
       if (bytes_read == 0) {
 	printf("write junk data to kick the avr\n");
 	write(portfd, ".", 1);
+	usleep(1000);
 	continue;
       }
 
@@ -293,13 +294,6 @@ int main(int argc, char *argv[]) {
     }
     set_blocking(1);
     ssize_t bytes_written = write(portfd, frame.buffer, 900);
-    /*ssize_t bytes_written = 0;
-    for (int blk = 0; blk < LEN * 3; blk += 100) {
-      int ct = write(portfd, frame.buffer + blk, 100);
-      bytes_written += ct;
-      printf("wrote %d bytes\n", ct);
-    }
-    */
     total_bytes_sent += bytes_written;
     if (debuglevel >= 5) printf("(total %d bytes)\n", (int)bytes_written);
     if (bytes_written != LEN * 3) {

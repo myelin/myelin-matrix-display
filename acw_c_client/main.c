@@ -41,14 +41,23 @@ void send_to_display(unsigned char* buffer, int buffer_len) {
   sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
 }
 
+// implemented by the particular animation we're compiling
+extern void setup_animation();
 extern void draw_frame(int frame);
 
 static unsigned char draw_buf[BUF_SIZE];
+
+void dim(int factor) {
+  for (unsigned char* ptr = draw_buf; ptr < draw_buf + BUF_SIZE; ++ptr) {
+    *ptr = *ptr * factor / 256;
+  }
+}
 
 void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
   int pos = (RGB ? 3 : 0) * (y * WIDTH + x);
   if (pos > BUF_SIZE) return;
   unsigned char* ptr = draw_buf + pos;
+  if (ptr < draw_buf || ptr > draw_buf + BUF_SIZE) return;
   if (RGB) {
     *ptr++ = r;
     *ptr++ = g;
@@ -56,6 +65,10 @@ void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
   } else {
     *ptr++ = (r + g + b) / 3;
   }
+}
+
+void point(int x, int y, int c) {
+  point(x, y, (unsigned char)(c >> 16), (unsigned char)(c >> 8), (unsigned char)c);
 }
 
 void rect(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b) {
@@ -90,6 +103,7 @@ void blank() {
 
 int main() {
   setup_display();
+  setup_animation();
   for (int frame = 0; ; ++frame) {
     draw_frame(frame);
     printf("sending frame %d to display\n", frame);

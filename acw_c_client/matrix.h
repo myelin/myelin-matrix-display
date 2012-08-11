@@ -12,6 +12,9 @@
 #define BUF_SIZE (WIDTH * HEIGHT * (RGB ? 3 : 1))
 
 extern void blank();
+extern void dim(int factor);
+extern void point(int x, int y, unsigned char r, unsigned char g, unsigned char b);
+extern void point(int x, int y, int c);
 extern void rect(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b);
 extern void rect(int x0, int y0, int x1, int y1, int c);
 extern int random_color();

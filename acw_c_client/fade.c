@@ -1,5 +1,8 @@
 #include "matrix.h"
 
+void setup_animation() {
+}
+
 void draw_frame(int frame) {
   static unsigned char r, g, b;
   int phase = frame % 16;

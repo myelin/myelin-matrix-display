@@ -1,5 +1,8 @@
 #include "matrix.h"
 
+void setup_animation() {
+}
+
 void draw_frame(int frame) {
   static int from = 0, to = 0;
   static int pos = 0;
