@@ -5,7 +5,7 @@ DEPS=matrix.h
 all: $(PROJECTS)
 
 clean:
-	rm -vrf $(PROJECTS) *~ *.dSYM
+	rm -rf $(PROJECTS) *~ *.dSYM
 
 $(PROJECTS): %: %.c $(CFILES) $(DEPS)
 	g++ -Wall -O2 -g -o $@ $< $(CFILES)
