@@ -4,15 +4,13 @@
 
 #include "matrix_daemon.h"
 
-#include <termios.h>
-
 int portfd;
 int debuglevel = 1;
 
 int setup_serial(const char* port_path) {
   int fd;
   struct termios options;
-#ifdef FAST_RS232
+#ifdef TRICKY_FAST_RS232
   struct serial_struct serialinfo;
 #endif
 
@@ -29,10 +27,14 @@ int setup_serial(const char* port_path) {
 
   printf("- Setting termios options\n");
   tcgetattr(fd, &options);
-#ifdef FAST_RS232
+#ifdef EASY_FAST_RS232
+#define BASE_BAUD B1000000
+#else
+#ifdef TRICKY_FAST_RS232
 #define BASE_BAUD B38400
 #else
 #define BASE_BAUD B115200
+#endif
 #endif
   if (cfsetispeed(&options, BASE_BAUD)) {
     perror("failed to set port to 115200 bps");
@@ -70,18 +72,21 @@ int setup_serial(const char* port_path) {
 
   // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
   options.c_cc[VMIN]  =
+    /*
 #ifdef __linux__
     255
 #else
     1
 #endif
+    */
+    0 // all reads are nonblocking
     ;
-  options.c_cc[VTIME] = 10;
+  options.c_cc[VTIME] = 5; // 0.5 s
 
   // set termios options
   tcsetattr(fd, TCSANOW, &options);
 
-#ifdef FAST_RS232
+#ifdef TRICKY_FAST_RS232
   printf("- Setting Linux serial_struct options\n");
   ioctl(fd, TIOCGSERIAL, &serialinfo);
   serialinfo.custom_divisor = serialinfo.baud_base / BAUD;
@@ -178,6 +183,9 @@ int main(int argc, char *argv[]) {
   portfd = setup_serial(argv[1]);
   setup_udp();
 
+  printf("Flushing serial input in case we have a startup announcement buffered (if this is an Uno)\n");
+  while (read(portfd, buf, 1) > 0); // VMIN=0, VTIME=5 means this will terminate when we don't get a byte in 0.5 s
+
   //test_loop_corruption();
 
   for (n_frame = 0; ; ++n_frame) {
@@ -201,7 +209,10 @@ int main(int argc, char *argv[]) {
       ssize_t bytes_read = read(portfd, buf, 1);
       if (bytes_read == 0) {
 	printf("write junk data to kick the avr\n");
-	write(portfd, ".", 1);
+	if (write(portfd, ".", 1) == -1) {
+	  printf("disconnect!\n");
+	  exit(2);
+	}
 	usleep(1000);
 	continue;
       }
@@ -280,6 +291,10 @@ int main(int argc, char *argv[]) {
       unsigned char c;
       while (read(portfd, &c, 1) < 1) {
 	if (debuglevel >= 10) printf("nothing\n");
+	if (write(portfd, "", 0) == -1) {
+	  printf("disconnect!\n");
+	  exit(2);
+	}
 	usleep(10000);
       }
       if (c == '#') {

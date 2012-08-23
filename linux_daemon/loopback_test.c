@@ -54,7 +54,9 @@ void test_loop_corruption() {
 	while (read(portfd, rxbuf, packet_size) > 0);
 	while (1) {
 	  unsigned char c = (unsigned char)rand();
-	  write(portfd, &c, 1);
+	  if (write(portfd, &c, 1) != 1) {
+	    printf("  (odd return from write())");
+	  }
 	  unsigned char d;
 	  if (read(portfd, &d, 1) == 1 && d == c) {
 	    printf("  sync achieved\n");

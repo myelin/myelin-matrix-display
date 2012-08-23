@@ -6,12 +6,17 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <termios.h>
 
 #ifdef __linux__
 #include <asm/ioctls.h>
 #include <sys/ioctl.h>
 #include <linux/serial.h>
-#define FAST_RS232
+#ifdef B1000000
+#define EASY_FAST_RS232
+#else
+#define TRICKY_FAST_RS232
+#endif
 #endif
 
 // c++ includes
