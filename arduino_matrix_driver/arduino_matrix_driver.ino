@@ -35,7 +35,9 @@ void fast_show() {
   uint8_t datapinmask = digitalPinToBitMask(dataPin);
   uint8_t resetmask = ~(clkpinmask | datapinmask);
 */
+// clock pin PORTD4 (avr pin 6, arduino pin 4)
 #define clkpinmask 0x10
+// data pin PORTD2 (avr pin 4, arduino pin 2)
 #define datapinmask 0x04
 
   for (uint8_t *stop_ptr = strip.pixels + strip.numPixels() * 3,  *pixel = strip.pixels; pixel != stop_ptr; ++pixel) {
@@ -51,6 +53,7 @@ void fast_show() {
     BANG_WS2801_BIT(0x01);
   }
 
+  PORTD &= ~datapinmask;
   delay(1);
 }
 
