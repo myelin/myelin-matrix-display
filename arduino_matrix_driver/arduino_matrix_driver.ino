@@ -1,10 +1,22 @@
-#include <SPI.h>
-#include <Adafruit_WS2801.h>
-
 /*
  * Driver for Want It! matrix display
  * (c) 2012 Phillip Pearson
+ * Ethernet additions by Philip Lindsay
  */
+
+#include <SPI.h>         // needed for Arduino versions later than 0018
+#include <Ethernet.h>
+#include <EthernetUdp.h>         // UDP library from: bjoern@cs.stanford.edu 12/30/2008
+#include <Adafruit_WS2801.h>
+
+// Our MAC and IP address
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+IPAddress ip(192, 168, 1, 99);
+
+unsigned int localPort = 58082;      // local port to listen on
+
+// An EthernetUDP instance to let us send and receive packets over UDP
+EthernetUDP Udp;
 
 // Duemilanove has an LED on pin 13 
 #define LED 13
@@ -81,6 +93,9 @@ void serial_print(const char* s) {
 }
 
 void setup() {
+  Ethernet.begin(mac,ip);
+  Udp.begin(localPort);
+
   // set LEDs weakly on in R/G/B pattern.
   strip.begin();
   uint8_t c = random(0, 255);
@@ -105,30 +120,52 @@ void setup() {
   serial_print("OK.\n");
 }
 
+long frameCount = 0;
+
 void loop() {
-  //TODO: integrate patterns from test code and clean this up
-  static uint8_t header_pos = 0;
-  while (header_pos < 4) {
-    while (!serial_available());
-    if (serial_read() == (header_pos < 2 ? '*' : '+')) {
-      ++header_pos;
+
+  // if there's data available on the ethernet interface, read a packet
+  int packetSize = Udp.parsePacket();
+
+  if (packetSize == 901) {
+    Udp.read();
+    for (int row = 0; row < 12; row+=2) {
+      // read one row forward
+      Udp.read(strip.pixels+(row*75), 75);
+      // and one row backward
+      for (int c=0; c<25; c++) {
+        Udp.read(strip.pixels+((row+1)*75) + ((24-c) * 3), 3);
+      }
     }
-  }
-  serial_print("#");
-  static uint16_t current_pixel = 0;
-  while (current_pixel < BUFFER_SIZE) {
-    while (!serial_available());
-    strip.pixels[current_pixel++] = (uint8_t)serial_read();
+
+    // update LEDs
+    fast_show();
   }
 
-  // push current pattern to the LEDs
-  fast_show();
+//  //TODO: integrate patterns from test code and clean this up
+//  static uint8_t header_pos = 0;
+//  while (header_pos < 4) {
+//    while (!serial_available());
+//    if (serial_read() == (header_pos < 2 ? '*' : '+')) {
+//      ++header_pos;
+//    }
+//  }
+//  serial_print("#");
+//  static uint16_t current_pixel = 0;
+//  while (current_pixel < BUFFER_SIZE) {
+//    while (!serial_available());
+//    strip.pixels[current_pixel++] = (uint8_t)serial_read();
+//  }
+//
+//  // push current pattern to the LEDs
+//  fast_show();
+//
+//  // toggle the LED (debugging)
+//  digitalWrite(LED, !digitalRead(LED));
+//
+//  // prepare for next round
+//  header_pos = 0;
+//  current_pixel = 0;
+//  serial_print("OK.\n");
 
-  // toggle the LED (debugging)
-  digitalWrite(LED, !digitalRead(LED));
-
-  // prepare for next round
-  header_pos = 0;
-  current_pixel = 0;
-  serial_print("OK.\n");
 }
