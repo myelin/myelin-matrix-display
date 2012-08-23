@@ -4,10 +4,13 @@
  * Ethernet additions by Philip Lindsay
  */
 
+#define MX_USE_ETHERNET
+
 #include <SPI.h>         // needed for Arduino versions later than 0018
+#include <Adafruit_WS2801.h>
+#ifdef MX_USE_ETHERNET
 #include <Ethernet.h>
 #include <EthernetUdp.h>         // UDP library from: bjoern@cs.stanford.edu 12/30/2008
-#include <Adafruit_WS2801.h>
 
 // Our MAC and IP address
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -17,6 +20,7 @@ unsigned int localPort = 58082;      // local port to listen on
 
 // An EthernetUDP instance to let us send and receive packets over UDP
 EthernetUDP Udp;
+#endif
 
 // Duemilanove has an LED on pin 13 
 #define LED 13
@@ -93,8 +97,10 @@ void serial_print(const char* s) {
 }
 
 void setup() {
+#ifdef MX_USE_ETHERNET
   Ethernet.begin(mac,ip);
   Udp.begin(localPort);
+#endif
 
   // set LEDs weakly on in R/G/B pattern.
   strip.begin();
@@ -121,51 +127,59 @@ void setup() {
 }
 
 long frameCount = 0;
+long last_serial_frame = 0;
 
 void loop() {
 
-  // if there's data available on the ethernet interface, read a packet
-  int packetSize = Udp.parsePacket();
+  // handle serial input first, because we need to busy-wait on that
+  if (serial_available()) {
+    // at this point we block while reading the data from the host, because otherwise we'll miss characters.
+    //TODO: set a watchdog timer to reset if we block for too long (200 ms?)
+    for (uint8_t header_pos = 0; header_pos < 4; ++header_pos) {
+      while (!serial_available());
+      if (serial_read() != (header_pos < 2 ? '*' : '+')) return; // anything other than the preamble will kick us back out so we can pick up udp packets again
 
-  if (packetSize == 901) {
-    Udp.read();
-    for (int row = 0; row < 12; row+=2) {
-      // read one row forward
-      Udp.read(strip.pixels+(row*75), 75);
-      // and one row backward
-      for (int c=0; c<25; c++) {
-        Udp.read(strip.pixels+((row+1)*75) + ((24-c) * 3), 3);
+      // let the host know we received the preamble
+      serial_print("#");
+
+      // read pixel data
+      for (uint16_t current_pixel = 0; current_pixel < BUFFER_SIZE; ++current_pixel) {
+        while (!serial_available());
+        strip.pixels[current_pixel] = (uint8_t)serial_read();
       }
-    }
 
-    // update LEDs
-    fast_show();
+      // push current pattern to the LEDs
+      fast_show();
+
+      // toggle the LED (debugging)
+      digitalWrite(LED, !digitalRead(LED));
+
+      // let the host know we're ready again
+      serial_print("OK.\n");
+      last_serial_frame = millis(); // don't listen on ethernet for 500 ms or so
+    }
   }
 
-//  //TODO: integrate patterns from test code and clean this up
-//  static uint8_t header_pos = 0;
-//  while (header_pos < 4) {
-//    while (!serial_available());
-//    if (serial_read() == (header_pos < 2 ? '*' : '+')) {
-//      ++header_pos;
-//    }
-//  }
-//  serial_print("#");
-//  static uint16_t current_pixel = 0;
-//  while (current_pixel < BUFFER_SIZE) {
-//    while (!serial_available());
-//    strip.pixels[current_pixel++] = (uint8_t)serial_read();
-//  }
-//
-//  // push current pattern to the LEDs
-//  fast_show();
-//
-//  // toggle the LED (debugging)
-//  digitalWrite(LED, !digitalRead(LED));
-//
-//  // prepare for next round
-//  header_pos = 0;
-//  current_pixel = 0;
-//  serial_print("OK.\n");
+#ifdef MX_USE_ETHERNET
+  if ((millis() - last_serial_frame) > 500) {
+    // if there's data available on the ethernet interface, read a packet
+    int packetSize = Udp.parsePacket();
+    if (packetSize == 901) {
+      serial_print("udp\n");
+      Udp.read();
+      for (int row = 0; row < 12; row+=2) {
+        // read one row forward
+        Udp.read(strip.pixels+(row*75), 75);
+        // and one row backward
+        for (int c=0; c<25; c++) {
+          Udp.read(strip.pixels+((row+1)*75) + ((24-c) * 3), 3);
+        }
+      }
+
+      // update LEDs
+      fast_show();
+    }
+  }
+#endif
 
 }
