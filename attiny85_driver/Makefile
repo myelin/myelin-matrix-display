@@ -1,4 +1,4 @@
-OFILES=main.o ws2801.o effects.o
+OFILES=main.o ../attiny85_ws2801/ws2801.o effects.o
 BIN=/Applications/Arduino.app/Contents/Resources/Java/hardware/tools/avr/bin
 DBIN=../misc
 
@@ -10,7 +10,7 @@ clean:
 	rm -f $(OFILES) tinydriver.out tinydriver.hex
 
 $(OFILES): %.o: %.c
-	$(BIN)/avr-g++ -Wall -DF_CPU=8000000UL -mmcu=attiny85 -Os -o $@ -c $<
+	$(BIN)/avr-g++ -Wall -I../attiny85_ws2801 -DF_CPU=8000000UL -mmcu=attiny85 -Os -o $@ -c $<
 
 build: $(OFILES)
 	$(BIN)/avr-gcc -Os -Wl,--gc-sections -mmcu=attiny85 -o tinydriver.out $(OFILES) -lm -lc
