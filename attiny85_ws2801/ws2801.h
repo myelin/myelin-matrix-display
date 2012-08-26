@@ -4,11 +4,8 @@
  * You may use this under a CC Attribution license.
  */
 
-// settings for ws2801 driver
-
-#define WIDTH 25
-#define HEIGHT 2
-#define N_PIXELS (WIDTH*HEIGHT)
+// settings for ws2801 driver - local to individual project
+#include "ws2801_configuration.h"
 
 // data = attiny85 pin 2 (PB3)
 #define WS2801_DATA_PORT PORTB
@@ -22,4 +19,5 @@
 
 // declarations; don't change these!
 #define WS2801_BUFFER_LEN (N_PIXELS * 3)
+extern void ws2801_setup();
 extern void ws2801_show(const uint8_t* data);

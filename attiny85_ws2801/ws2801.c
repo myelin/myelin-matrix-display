@@ -8,6 +8,11 @@
 #include <util/delay.h>
 #include "ws2801.h"
 
+void ws2801_setup() {
+  WS2801_DATA_DDR |= 1 << WS2801_DATA_PIN;
+  WS2801_CLOCK_DDR |= 1 << WS2801_CLOCK_PIN;
+}
+
 void ws2801_show(const uint8_t* data) {
 #define clkpinmask (1 << WS2801_CLOCK_PIN)
 #define datapinmask (1 << WS2801_DATA_PIN)
