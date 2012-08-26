@@ -18,6 +18,6 @@ build: $(OFILES)
 
 program: build
 	-sudo kextunload /System/Library/Extensions/FTDIUSBSerialDriver.kext
-	$(DBIN)/avrdude -C $(DBIN)/avrdude.conf -c ftdi -P ft0 -v -e -p attiny85 -B 1 -Uefuse:w:0xFF:m -Uhfuse:w:0xDA:m -Ulfuse:w:0xF2:m
-	$(DBIN)/avrdude -C $(DBIN)/avrdude.conf -c ftdi -P ft0 -v -e -p attiny85 -Uflash:w:tinydriver.hex
+	avrdude -c ftdi -P ft0 -v -e -p attiny85 -B 1 -Uefuse:w:0xFF:m -Uhfuse:w:0xDA:m -Ulfuse:w:0xF2:m
+	avrdude -c ftdi -P ft0 -v -e -p attiny85 -Uflash:w:tinydriver.hex
 	sudo kextload /System/Library/Extensions/FTDIUSBSerialDriver.kext
