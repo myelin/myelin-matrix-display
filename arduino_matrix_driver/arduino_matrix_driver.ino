@@ -8,9 +8,11 @@
 
 #include <SPI.h>         // needed for Arduino versions later than 0018
 #include <Adafruit_WS2801.h>
+#define ADAFRUIT_WS2801_INCLUDED
 #ifdef MX_USE_ETHERNET
 #include <Ethernet.h>
 #include <EthernetUdp.h>         // UDP library from: bjoern@cs.stanford.edu 12/30/2008
+#include "matrix.h"
 
 // Our MAC and IP address
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -26,17 +28,8 @@ EthernetUDP Udp;
 #define LED 13
 
 // comms speed
-#define BAUD 1000000
-//#define BAUD 115200
-
-// Display dimensions
-#define WIDTH 25
-#define HEIGHT 12
-#define PIXEL_COUNT (WIDTH*HEIGHT)
-// Bytes per pixel
-#define PIXEL_SIZE 3
-// Bytes per frame buffer
-#define BUFFER_SIZE (PIXEL_COUNT * PIXEL_SIZE)
+//#define BAUD 1000000
+#define BAUD 115200
 // Pins that connect to the WS2801 string (must be on PORTD)
 #define WS2801_DATA PORTD2
 #define WS2801_CLOCK PORTD4
@@ -126,10 +119,17 @@ void setup() {
   serial_print("OK.\n");
 }
 
-long frameCount = 0;
-long last_serial_frame = 0;
+long last_serial_frame = 0, last_ethernet_frame = 0, last_frame = 0;
+int current_frame = 0;
+
+int current_mode = 0;
+extern void draw_test(int frame);
+extern void draw_bounce(int frame);
+extern void draw_lines(int frame);
+extern void draw_epilepsy(int frame);
 
 void loop() {
+  unsigned long now = millis();
 
   // handle serial input first, because we need to busy-wait on that
   if (serial_available()) {
@@ -143,7 +143,7 @@ void loop() {
       serial_print("#");
 
       // read pixel data
-      for (uint16_t current_pixel = 0; current_pixel < BUFFER_SIZE; ++current_pixel) {
+      for (uint16_t current_pixel = 0; current_pixel < BUF_SIZE; ++current_pixel) {
         while (!serial_available());
         strip.pixels[current_pixel] = (uint8_t)serial_read();
       }
@@ -156,12 +156,12 @@ void loop() {
 
       // let the host know we're ready again
       serial_print("OK.\n");
-      last_serial_frame = millis(); // don't listen on ethernet for 500 ms or so
+      last_serial_frame = now; // don't listen on ethernet for 500 ms or so
     }
   }
 
 #ifdef MX_USE_ETHERNET
-  if ((millis() - last_serial_frame) > 500) {
+  if ((now - last_serial_frame) > 500) {
     // if there's data available on the ethernet interface, read a packet
     int packetSize = Udp.parsePacket();
     if (packetSize == 901) {
@@ -178,8 +178,29 @@ void loop() {
 
       // update LEDs
       fast_show();
+      last_ethernet_frame = now;
     }
   }
 #endif
+
+#define FRAMES_PER_MODE 300
+
+  if ((now - last_ethernet_frame) > 500 && (now - last_frame) > 30) {
+    switch (current_mode) {
+      case 0: draw_test(current_frame); break;
+      //case 1: draw_epilepsy(current_frame); break;
+      case 2: draw_bounce(current_frame); break;
+      //case 3: draw_lines(current_frame); break;
+      default:
+        if (++current_mode > 3) current_mode = 0;
+        break;
+    }
+    fast_show();
+    if (++current_frame >= FRAMES_PER_MODE) {
+      ++current_mode;
+      current_frame = 0;
+    }
+    last_frame = now;
+  }
 
 }
