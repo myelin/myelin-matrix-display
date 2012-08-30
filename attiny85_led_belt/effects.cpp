@@ -233,7 +233,16 @@ static void trailchase() {
   }
 }
 
+static void paparazzi() {
+	for (int frame = 0; frame < N_PIXELS * 2; ++frame) {
+		point(randbyte() % N_PIXELS, randbyte(), randbyte(), randbyte());
+		flip();
+		delay(20);
+	}
+}
+
 void run_effects() {
+	paparazzi();
   chase();
   flashes();
   return;
