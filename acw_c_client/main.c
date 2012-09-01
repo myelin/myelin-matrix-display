@@ -36,8 +36,12 @@ void send_to_display(unsigned char* buffer, int buffer_len) {
   inet_aton("127.0.0.1", &addr.sin_addr); // localhost
   sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
 
-  // and to want it! matrix
+  // and to laptop
   inet_aton("192.168.1.78", &addr.sin_addr); // localhost
+  sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
+
+  // and to want it! matrix
+  inet_aton("192.168.1.99", &addr.sin_addr); // localhost
   sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
 }
 
