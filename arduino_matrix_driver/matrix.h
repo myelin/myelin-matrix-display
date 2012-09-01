@@ -25,3 +25,4 @@ extern void rect(int x0, int y0, int x1, int y1, uint32_t c);
 
 extern void serial_write(uint8_t c);
 
+extern void set_frame_rate(uint8_t frame_rate);

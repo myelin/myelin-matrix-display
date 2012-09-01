@@ -121,6 +121,11 @@ void setup() {
 
 long last_serial_frame = 0, last_ethernet_frame = 0, last_frame = 0;
 int current_frame = 0;
+uint8_t ms_per_frame = 30;
+
+void set_frame_rate(uint8_t frame_rate) {
+  ms_per_frame = 1000 / frame_rate;
+}
 
 int current_mode = 0;
 extern void draw_test(int frame);
@@ -185,14 +190,14 @@ void loop() {
 
 #define FRAMES_PER_MODE 300
 
-  if ((now - last_ethernet_frame) > 500 && (now - last_frame) > 30) {
+  if ((now - last_ethernet_frame) > 500 && (now - last_frame) > ms_per_frame) {
     switch (current_mode) {
+      case 1: draw_lines(current_frame); break;
       case 0: draw_test(current_frame); break;
       //case 1: draw_epilepsy(current_frame); break;
       case 2: draw_bounce(current_frame); break;
-      //case 3: draw_lines(current_frame); break;
       default:
-        if (++current_mode > 3) current_mode = 0;
+        if (++current_mode > 2) current_mode = 0;
         break;
     }
     fast_show();

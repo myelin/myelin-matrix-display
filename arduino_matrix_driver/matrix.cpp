@@ -36,10 +36,10 @@ uint32_t random_color() {
 void line(int x0, int y0, int x1, int y1, uint32_t c) {
   if (x0 == x1) {
     // vertical
-    for (int y = y0; y < y1; ++y) point(x0, y, c);
+    for (int y = min(y0, y1); y < max(y0, y1); ++y) point(x0, y, c);
   } else if (y0 == y1) {
     // horizontal
-    for (int x = x0; x < x1; ++x) point(x, y0, c);
+    for (int x = min(x0, x1); x < max(x0, x1); ++x) point(x, y0, c);
   } else if ((y1 - y0) > (x1 - x0)) {
     // more vertical than horizontal
     for (int y = y0; y < y1; ++y) point(x0 + (y - y0) * (x1 - x0) / (y1 - y0), y, c);

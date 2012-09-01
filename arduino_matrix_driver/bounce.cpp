@@ -53,6 +53,7 @@ void setup_animation() {
 }
 
 void draw_bounce(int frame) {
+  set_frame_rate(15);
   dim(150);
   for (int i = 0; i < N_BALLS; ++i) {
     //printf("ball %d: height %d v %d delay %d\n", i, balls[i].y, balls[i].v, balls[i].delay);
