@@ -31,7 +31,7 @@ RF24 radio(8, 10);
 // GRAPHIC DATA
 
 // current mode
-mode_t current_mode = MODE_NONE;
+mode_t current_mode = (mode_t)0;
 
 // when the last frame was shown (actually when the last frame *should* have been shown -- we attempt to keep to the specified frame rate)
 unsigned long last_frame_time = 0;
@@ -123,10 +123,10 @@ void setup(void)
   */
   
   // test chase mode
-  current_mode = MODE_CHASE;
+  //current_mode = MODE_CHASE;
   
   // test rainbow mode
-  //current_mode = MODE_RAINBOW;
+  current_mode = MODE_RAINBOW;
 }
 
 // do something weird so we know something is broken
@@ -240,9 +240,6 @@ static bool mode_rainbow() {
 // render a frame in the current mode.  return true if a frame has been rendered into the backbuffer, or false if not.
 static bool execute_mode() {
   switch (current_mode) {
-    case MODE_NONE:
-      // haven't decided what to do here!
-      break;
     case MODE_FADE: return mode_fade();
     case MODE_STROBE: return mode_strobe();
     case MODE_CHASE: return mode_chase();

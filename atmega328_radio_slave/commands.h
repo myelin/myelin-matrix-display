@@ -8,11 +8,10 @@
 // mode / command enum
 
 enum mode_t {
-  MODE_NONE = 0,
-  MODE_FADE = 2,
-  MODE_STROBE = 3,
-  MODE_CHASE = 4,
-  MODE_RAINBOW = 5
+  MODE_FADE = 0,
+  MODE_STROBE = 1,
+  MODE_CHASE = 2,
+  MODE_RAINBOW = 3
 };
 
 // primitives
