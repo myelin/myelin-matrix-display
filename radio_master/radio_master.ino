@@ -4,13 +4,14 @@
 #include "printf.h"
 #include "deadbeef_rand.h"
 
+//#define DEBUG_TRANSMISSION
+
 // nRF24L01+ radio; uses RF24 lib and hardware SPI pins plus CE on D8 and CSN on D10
 RF24 radio(8,10);
 
 // controller takes this address
 #define MASTER_ADDRESS 0xF0F0F0F0E1LL
 
-uint8_t n_remotes = 2;
 //TODO store as 6 byte arrays rather than 8-byte uint64_ts
 uint64_t remote_addresses[] = {
   //0x651E3111A3LL, // phil board ONE
@@ -19,6 +20,7 @@ uint64_t remote_addresses[] = {
   0x3663D8A1B5LL // lamp board 4 (green terminal block power connector)
   //0xF8D45E390FLL, // lamp board 5 (home made power connector)
 };
+#define N_REMOTES (sizeof(remote_addresses) / sizeof(uint64_t))
 
 #define N_PIXELS 50
 #define PIXEL_SIZE 3
@@ -71,9 +73,13 @@ static bool send_command_buffer(uint8_t* buffer) {
     ok = radio.write( buffer, 32 );
     long now = millis();
     if (ok) {
+#ifdef DEBUG_TRANSMISSION
       printf("ok %d %d ", (int)(now - start), (int)(now - last));
+#endif
     } else {
+#ifdef DEBUG_TRANSMISSION
       printf("FAIL %d ", (int)(now - last));
+#endif
       if (++giveup > 10) {
         // too many failures
         ok = 1;
@@ -113,67 +119,54 @@ uint8_t modes_to_access[] = {
   3 // rainbow
 };
 
+uint8_t read_number() {
+  while (1) {
+    while (!Serial.available());
+    uint8_t c = Serial.read();
+    if (c == 10 || c == 13) continue;
+    return c - '0';
+  }
+}
+
 void loop(void)
 {
-  // loop through all modes
+  uint8_t lamp_no;
+  while (1) {
+    printf("\nEnter the number of the lamp you want to control (1-%d).\r\n", (int)N_REMOTES);
+    lamp_no = read_number();
+    if (lamp_no < 1 || lamp_no > N_REMOTES) {
+      printf("Invalid lamp number!\r\n");
+      continue;
+    }
+    printf("Lamp %d selected.\r\n", lamp_no);
+    break;
+  }
+  uint8_t mode;
+  while (1) {
+    printf("Enter the number of the mode you want to switch it to:\r\n");
+    printf("  1 = chase mode\r\n");
+    printf("  2 = chill rainbow mode\r\n");
+    printf("Or 0 to cancel\r\n");
+    switch (read_number()) {
+      case 0: mode = 0; break; // cancel
+      case 1: mode = 2; break; // chase
+      case 2: mode = 3; break; // rainbow
+      default:
+        printf("Invalid mode number!\r\n");
+        continue;
+    }
+    break;
+  }
+  if (!mode) return; // 0 to cancel
+
   uint8_t command[32];
   command[0] = 3;
-  uint8_t mode = 0;
-  while (true) {
-    command[0] = 3;
-    command[1] = modes_to_access[mode];
-    memset(command+2, 0, 30);
-    transmit_single_command(0, command);
-    mode = (mode + 1) % sizeof(modes_to_access);
-    delay(10000);
+  command[1] = mode;
+  memset(command+2, 0, 30);
+  if (transmit_single_command(lamp_no - 1, command)) {
+    printf("Command sent successfully\r\n");
+  } else {
+    printf("Unable to send command to lamp %d -- is it turned on and within range?\r\n", lamp_no);
   }
-  
-  static uint8_t current_slave = 0;
-  static uint8_t counter = 0;
-  
-  if (counter++ > 10) {
-    counter = 0;
-    current_slave = (current_slave + 1) % n_remotes;
-  }
-
-  uint8_t display[N_PIXELS * PIXEL_SIZE];
-#define ALL_RANDOM
-//#define FLASH
-//#define FADE
-
-#ifdef ALL_RANDOM
-  // make something random to send
-  for (uint8_t p = 0; p < N_PIXELS * PIXEL_SIZE; ++p) {
-    display[p] = deadbeef_rand();
-  }
-#endif
-#ifdef FLASH
-  static bool flash;
-  if (flash) flash = 0; else flash = ((deadbeef_rand() % 4) == 0);
-  for (uint8_t p = 0; p < N_PIXELS * PIXEL_SIZE; ++p) {
-    display[p] = flash ? 0x0F : 0;
-  }
-#endif
-#ifdef FADE
-  static uint8_t fade_pos = 0;
-  for (uint8_t p = 0; p < N_PIXELS; ++p) {
-    display[p * 3] = 255 - fade_pos;
-    display[p * 3 + 1] = 255 - fade_pos;
-    display[p * 3 + 2] = 0;
-  }
-  fade_pos += 25;
-#endif
-
-  for (uint8_t slave = 0; slave < n_remotes; ++slave) {
-    transmit_buffer(slave, display);
-  }
-  
-  long now = millis();
-  printf("-> %d ms\r\n", (int)(now - last_frame));
-
-#define FRAME_TIME 75
-  // delay before next frame
-  if ((int)(now - last_frame) < FRAME_TIME) delay(FRAME_TIME - (int)(now - last_frame));
-  last_frame = millis();
 }
 
