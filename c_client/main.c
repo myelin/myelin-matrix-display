@@ -77,11 +77,11 @@ void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
   }
 }
 
-void point(int x, int y, int c) {
+void point(int x, int y, color_t c) {
   point(x, y, (unsigned char)(c >> 16), (unsigned char)(c >> 8), (unsigned char)c);
 }
 
-void line(int x0, int y0, int x1, int y1, uint32_t c) {
+void line(int x0, int y0, int x1, int y1, color_t c) {
   if (x0 == x1) {
     // vertical
     for (int y = min(y0, y1); y < max(y0, y1); ++y) point(x0, y, c);
@@ -105,15 +105,15 @@ void rect(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsi
   }
 }
 
-void rect(int x0, int y0, int x1, int y1, int c) {
+void rect(int x0, int y0, int x1, int y1, color_t c) {
   rect(x0, y0, x1, y1, (unsigned char)(c >> 16), (unsigned char)(c >> 8), (unsigned char)c);
 }
 
-int random_color() {
+color_t random_color() {
   return rand() & 0xFFFFFF;
 }
 
-int color_fade(int color1, int color2, int pos) {
+color_t color_fade(color_t color1, color_t color2, int pos) {
   int r1 = (color1 >> 16) & 0xFF, g1 = (color1 >> 8) & 0xFF, b1 = color1 & 0xFF;
   int r2 = (color2 >> 16) & 0xFF, g2 = (color2 >> 8) & 0xFF, b2 = color2 & 0xFF;
 
@@ -121,6 +121,41 @@ int color_fade(int color1, int color2, int pos) {
   int r = (r1 * antipos + r2 * pos) / 510, g = (g1 * antipos + g2 * pos) / 510, b = (b1 * antipos + b2 * pos) / 510;
 
   return (r << 16) | (g << 8) | b;
+}
+
+/* wheel() generates an approximate rainbow.  Taken from the Adafruit_WS2801
+ * library, which requires the following text in all distributions:
+
+  Example sketch for driving Adafruit WS2801 pixels!
+
+  Designed specifically to work with the Adafruit RGB Pixels!
+  12mm Bullet shape ----> https://www.adafruit.com/products/322
+  12mm Flat shape   ----> https://www.adafruit.com/products/738
+  36mm Square shape ----> https://www.adafruit.com/products/683
+
+  These pixels use SPI to transmit the color data, and have built in
+  high speed PWM drivers for 24 bit color per pixel
+  2 pins are required to interface
+
+  Adafruit invests time and resources providing this open source code,
+  please support Adafruit and open-source hardware by purchasing
+  products from Adafruit!
+
+  Written by Limor Fried/Ladyada for Adafruit Industries.
+  BSD license, all text above must be included in any redistribution
+
+*/
+
+color_t wheel(uint8_t pos) {
+  if (pos < 85) {
+		return color(pos * 3, 255 - pos * 3, 0);
+  } else if (pos < 170) {
+		pos -= 85;
+		return color(255 - pos * 3, 0, pos * 3);
+  } else {
+		pos -= 170;
+		return color(0, pos * 3, 255 - pos * 3);
+  }
 }
 
 void blank() {

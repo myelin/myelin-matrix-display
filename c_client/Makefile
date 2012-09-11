@@ -1,5 +1,5 @@
 CFILES=main.c
-PROJECTS=fade white epilepsy bounce chill strobe chase sweep wantit test
+PROJECTS=fade white epilepsy bounce chill strobe chase sweep wantit test rainbow
 DEPS=matrix.h
 
 all: $(PROJECTS)
