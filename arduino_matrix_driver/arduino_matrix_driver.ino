@@ -166,12 +166,16 @@ void loop() {
   }
 
 #ifdef MX_USE_ETHERNET
+#define ETH_WIDTH 25
+#define ETH_HEIGHT 12
+#define ETH_BUF_SIZE (ETH_WIDTH * ETH_HEIGHT * PIXEL_SIZE)
   if ((now - last_serial_frame) > 500) {
     // if there's data available on the ethernet interface, read a packet
     int packetSize = Udp.parsePacket();
-    if (packetSize == 901) {
+    if (packetSize == ETH_WIDTH * ETH_HEIGHT * PIXEL_SIZE + 1) {
       serial_print("udp\n");
       Udp.read();
+#ifdef HORIZONTAL_ADDRESSING
       for (int row = 0; row < 12; row+=2) {
         // read one row forward
         Udp.read(strip.pixels+(row*75), 75);
@@ -180,6 +184,24 @@ void loop() {
           Udp.read(strip.pixels+((row+1)*75) + ((24-c) * 3), 3);
         }
       }
+#elif defined VERTICAL_ADDRESSING
+      uint8_t packet_buffer[ETH_BUF_SIZE];
+      Udp.read(packet_buffer, ETH_BUF_SIZE);
+      // reformat...
+      uint8_t *ptr = strip.pixels;
+      for (int x = 0; x < WIDTH; x += 2) {
+        // run down
+        for (int y = 0; y < HEIGHT; ++y) {
+          uint8_t *in = packet_buffer + (y * ETH_WIDTH + x) * PIXEL_SIZE;
+          *ptr++ = *in++; *ptr++ = *in++; *ptr++ = *in++;
+        }
+        // and up
+        for (int y = HEIGHT - 1; y >= 0; --y) {
+          uint8_t *in = packet_buffer + (y * ETH_WIDTH + x + 1) * PIXEL_SIZE;
+          *ptr++ = *in++; *ptr++ = *in++; *ptr++ = *in++;
+        }
+      }
+#endif
 
       // update LEDs
       fast_show();

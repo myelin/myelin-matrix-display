@@ -16,6 +16,11 @@ extern Adafruit_WS2801 strip;
 #define BUF_SIZE (PIXEL_COUNT * PIXEL_SIZE)
 #define RGB 1
 
+// original addressing style, used at burning man 2012
+//#define HORIZONTAL_ADDRESSING
+// new addressing style, which reduces the number of cable connections between panels down to 1
+#define VERTICAL_ADDRESSING
+
 extern uint32_t random_color();
 extern void dim(int factor);
 extern void point(int x, int y, unsigned char r, unsigned char g, unsigned char b);

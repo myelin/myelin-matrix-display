@@ -51,6 +51,12 @@ extern void draw_frame(int frame);
 
 static unsigned char draw_buf[BUF_SIZE];
 
+int frame_rate = 30;
+
+void set_frame_rate(int rate) {
+	frame_rate = rate;
+}
+
 void dim(int factor) {
   for (unsigned char* ptr = draw_buf; ptr < draw_buf + BUF_SIZE; ++ptr) {
     *ptr = *ptr * factor / 256;
@@ -73,6 +79,22 @@ void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
 
 void point(int x, int y, int c) {
   point(x, y, (unsigned char)(c >> 16), (unsigned char)(c >> 8), (unsigned char)c);
+}
+
+void line(int x0, int y0, int x1, int y1, uint32_t c) {
+  if (x0 == x1) {
+    // vertical
+    for (int y = min(y0, y1); y < max(y0, y1); ++y) point(x0, y, c);
+  } else if (y0 == y1) {
+    // horizontal
+    for (int x = min(x0, x1); x < max(x0, x1); ++x) point(x, y0, c);
+  } else if ((y1 - y0) > (x1 - x0)) {
+    // more vertical than horizontal
+    for (int y = y0; y < y1; ++y) point(x0 + (y - y0) * (x1 - x0) / (y1 - y0), y, c);
+  } else {
+    // more horizontal than vertical
+    for (int x = x0; x < x1; ++x) point(x, y0 + (x - x0) * (y1 - y0) / (x1 - x0), c);
+  }
 }
 
 void rect(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b) {
@@ -112,6 +134,6 @@ int main() {
     draw_frame(frame);
     printf("sending frame %d to display\n", frame);
     send_to_display(draw_buf, sizeof(draw_buf));
-    usleep(1000000 / FRAMERATE); //TODO: take into account generate/send time
+    usleep(1000000 / frame_rate); //TODO: take into account generate/send time
   }
 }
