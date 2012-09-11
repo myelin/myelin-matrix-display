@@ -35,6 +35,6 @@ extern void rect(int x0, int y0, int x1, int y1, color_t c);
 extern color_t random_color();
 extern color_t color_fade(color_t color1, color_t color2, int pos);
 extern void set_frame_rate(int rate);
-extern color_t wheel(uint8_t pos);
+extern color_t wheel(uint16_t pos);
 
 #endif // __MATRIX_H

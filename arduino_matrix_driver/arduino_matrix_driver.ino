@@ -132,6 +132,7 @@ extern void draw_test(int frame);
 extern void draw_bounce(int frame);
 extern void draw_lines(int frame);
 extern void draw_epilepsy(int frame);
+extern void draw_rainbow(int frame);
 
 void loop() {
   unsigned long now = millis();

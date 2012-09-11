@@ -54,7 +54,7 @@ static unsigned char draw_buf[BUF_SIZE];
 int frame_rate = 30;
 
 void set_frame_rate(int rate) {
-	frame_rate = rate;
+  frame_rate = rate;
 }
 
 void dim(int factor) {
@@ -123,8 +123,9 @@ color_t color_fade(color_t color1, color_t color2, int pos) {
   return (r << 16) | (g << 8) | b;
 }
 
-/* wheel() generates an approximate rainbow.  Taken from the Adafruit_WS2801
- * library, which requires the following text in all distributions:
+/* wheel(0-767) generates an approximate rainbow.  Based on Wheel()
+ * from the Adafruit_WS2801 library, which requires the following
+ * text in all distributions:
 
   Example sketch for driving Adafruit WS2801 pixels!
 
@@ -146,15 +147,15 @@ color_t color_fade(color_t color1, color_t color2, int pos) {
 
 */
 
-color_t wheel(uint8_t pos) {
-  if (pos < 85) {
-		return color(pos * 3, 255 - pos * 3, 0);
-  } else if (pos < 170) {
-		pos -= 85;
-		return color(255 - pos * 3, 0, pos * 3);
+color_t wheel(uint16_t pos) {
+  if (pos < 256) {
+    return color(255 - pos, pos, 0);
+  } else if (pos < 512) {
+    pos -= 256;
+    return color(0, 255 - pos, pos);
   } else {
-		pos -= 170;
-		return color(0, pos * 3, 255 - pos * 3);
+    pos -= 512;
+    return color(pos, 0, 255 - pos);
   }
 }
 

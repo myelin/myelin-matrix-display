@@ -21,12 +21,18 @@ extern Adafruit_WS2801 strip;
 // new addressing style, which reduces the number of cable connections between panels down to 1
 #define VERTICAL_ADDRESSING
 
+typedef uint32_t color_t;
+inline color_t color(uint8_t r, uint8_t g, uint8_t b) {
+  return ((color_t)r << 16) | ((color_t)g << 8) | (color_t)b;
+}
+
 extern uint32_t random_color();
 extern void dim(int factor);
 extern void point(int x, int y, unsigned char r, unsigned char g, unsigned char b);
-extern void point(int x, int y, uint32_t c);
-extern void line(int x0, int y0, int x1, int y1, uint32_t c);
-extern void rect(int x0, int y0, int x1, int y1, uint32_t c);
+extern void point(int x, int y, color_t c);
+extern void line(int x0, int y0, int x1, int y1, color_t c);
+extern void rect(int x0, int y0, int x1, int y1, color_t c);
+extern color_t wheel(uint16_t pos);
 
 extern void serial_write(uint8_t c);
 

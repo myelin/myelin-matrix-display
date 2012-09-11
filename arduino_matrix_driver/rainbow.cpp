@@ -1,11 +1,8 @@
 #include "matrix.h"
 
-void setup_animation() {
+void draw_rainbow(int frame) {
   set_frame_rate(30);
-}
-
-void draw_frame(int frame) {
-  static int pos = 0;
+  static uint16_t pos = 0;
 
   rect(0, 0, WIDTH, HEIGHT, wheel(pos));
 
