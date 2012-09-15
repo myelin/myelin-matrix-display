@@ -4,15 +4,16 @@
  * Ethernet additions by Philip Lindsay
  */
 
+#define MX_USE_SERIAL
 #define MX_USE_ETHERNET
 
 #include <SPI.h>         // needed for Arduino versions later than 0018
 #include <Adafruit_WS2801.h>
 #define ADAFRUIT_WS2801_INCLUDED
+#include "matrix.h"
 #ifdef MX_USE_ETHERNET
 #include <Ethernet.h>
 #include <EthernetUdp.h>         // UDP library from: bjoern@cs.stanford.edu 12/30/2008
-#include "matrix.h"
 
 // Our MAC and IP address
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
@@ -131,12 +132,14 @@ int current_mode = 0;
 extern void draw_test(int frame);
 extern void draw_bounce(int frame);
 extern void draw_lines(int frame);
+extern void draw_insane_lines(int frame);
 extern void draw_epilepsy(int frame);
 extern void draw_rainbow(int frame);
 
 void loop() {
   unsigned long now = millis();
 
+#ifdef MX_USE_SERIAL
   // handle serial input first, because we need to busy-wait on that
   if (serial_available()) {
     // at this point we block while reading the data from the host, because otherwise we'll miss characters.
@@ -165,6 +168,7 @@ void loop() {
       last_serial_frame = now; // don't listen on ethernet for 500 ms or so
     }
   }
+#endif // MX_USE_SERIAL
 
 #ifdef MX_USE_ETHERNET
 #define ETH_WIDTH 25
@@ -186,20 +190,13 @@ void loop() {
         }
       }
 #elif defined VERTICAL_ADDRESSING
-      uint8_t packet_buffer[ETH_BUF_SIZE];
-      Udp.read(packet_buffer, ETH_BUF_SIZE);
-      // reformat...
-      uint8_t *ptr = strip.pixels;
-      for (int x = 0; x < WIDTH; x += 2) {
-        // run down
-        for (int y = 0; y < HEIGHT; ++y) {
-          uint8_t *in = packet_buffer + (y * ETH_WIDTH + x) * PIXEL_SIZE;
-          *ptr++ = *in++; *ptr++ = *in++; *ptr++ = *in++;
-        }
-        // and up
-        for (int y = HEIGHT - 1; y >= 0; --y) {
-          uint8_t *in = packet_buffer + (y * ETH_WIDTH + x + 1) * PIXEL_SIZE;
-          *ptr++ = *in++; *ptr++ = *in++; *ptr++ = *in++;
+      // read a row at a time
+      uint8_t packet_buffer[ETH_WIDTH * PIXEL_SIZE];
+      for (int y = 0; y < HEIGHT; ++y) {
+        Udp.read(packet_buffer, ETH_WIDTH * PIXEL_SIZE);
+        uint8_t *in = packet_buffer;
+        for (int x = 0; x < WIDTH; ++x) {
+          point(x, y, *in++, *in++, *in++);
         }
       }
 #endif
@@ -213,16 +210,36 @@ void loop() {
 
 #define FRAMES_PER_MODE 300
 
+//#define CHILL
+//#define INSANE
+//#define WANT_IT_2012
+#define JUST_BOUNCE
+
   if ((now - last_ethernet_frame) > 500 && (now - last_frame) > ms_per_frame) {
-    switch (current_mode) {
-      case 1: draw_lines(current_frame); break;
-      case 0: draw_test(current_frame); break;
-      //case 1: draw_epilepsy(current_frame); break;
-      case 2: draw_bounce(current_frame); break;
-      default:
-        if (++current_mode > 2) current_mode = 0;
-        break;
-    }
+    uint8_t handled;
+    do {
+      handled = 1;
+      switch (current_mode) {
+#if defined(WANT_IT_2012)
+        case 0: draw_test(current_frame); break;
+        case 1: draw_lines(current_frame); break;
+#endif
+#if defined(INSANE)
+        case 2: draw_epilepsy(current_frame); break;
+//        case 3: draw_insane_lines(current_frame); break;
+#endif
+#if defined(WANT_IT_2012) || defined(JUST_BOUNCE)
+        case 4: draw_bounce(current_frame); break;
+#endif
+#if defined(CHILL)
+        case 5: draw_rainbow(current_frame); break;
+#endif
+        default:
+          handled = 0;
+          if (++current_mode > 10) current_mode = 0;
+          break;
+      }
+    } while (!handled);
     fast_show();
     if (++current_frame >= FRAMES_PER_MODE) {
       ++current_mode;

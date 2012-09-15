@@ -28,6 +28,7 @@ inline color_t color(uint8_t r, uint8_t g, uint8_t b) {
 
 extern uint32_t random_color();
 extern void dim(int factor);
+extern void blank();
 extern void point(int x, int y, unsigned char r, unsigned char g, unsigned char b);
 extern void point(int x, int y, color_t c);
 extern void line(int x0, int y0, int x1, int y1, color_t c);

@@ -15,3 +15,28 @@ void draw_lines(int frame) {
     }
   }
 }
+
+void draw_insane_lines(int frame) {
+  set_frame_rate(30);
+
+  uint32_t c = random_color();
+/*  if (frame & 1) {
+    // invert
+    rect(0, 0, WIDTH, HEIGHT, c);
+    c = 0;
+  } else {*/
+    blank();
+//  }
+  if (frame & 1) {
+    // horizontal
+    int y = random(0, HEIGHT);
+    line(0, y, WIDTH, y, c);
+  } else {
+    // vertical
+    for (uint8_t i = 0; i < 2; ++i) {
+      int x = random(0, WIDTH);
+      line(x, 0, x, HEIGHT, c);
+    }
+  }
+}
+

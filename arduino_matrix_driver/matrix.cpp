@@ -9,6 +9,10 @@ void dim(int factor) {
   }
 }
 
+void blank() {
+  memset(draw_buf, 0, BUF_SIZE);
+}
+
 void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
 #ifdef HORIZONTAL_ADDRESSING
   // monolithic matrix display (oct 2012) - snaking horizontally from top left corner.  original format, used at burning man 2012.
