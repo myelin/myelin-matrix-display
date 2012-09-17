@@ -4,13 +4,18 @@ sock = socket.socket( socket.AF_INET, # Internet
 
 WIDTH = 25
 HEIGHT = 12
+PIXEL_SIZE = 3
 
-def show(data):
-    output = ['\x01']
+def encode(data):
+    output = []
     for row in data:
         for pixel in row:
             output.append(chr(pixel[0]) + chr(pixel[1]) + chr(pixel[2]))
-    sock.sendto(''.join(output), ("192.168.1.99", 58082))
+    return ''.join(output)
+
+def show(data):
+    output = '\x01' + encode(data)
+    sock.sendto(output, ("192.168.1.99", 58082))
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -27,11 +32,35 @@ def blank():
 def random_color():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
+def multiply(c, factor):
+    return (int(c[0] * factor), int(c[1] * factor), int(c[2] * factor))
+
+def load(fn):
+    pixels = open(fn, 'rb').read()
+    assert len(pixels) == WIDTH * HEIGHT * PIXEL_SIZE
+    data = []
+    row_size = WIDTH * PIXEL_SIZE
+    for y in range(HEIGHT):
+        encoded_row = pixels[y * row_size:(y+1) * row_size]
+        row = []
+        for x in range(WIDTH):
+            row.append((ord(encoded_row[x * PIXEL_SIZE]), ord(encoded_row[x * PIXEL_SIZE + 1]), ord(encoded_row[x * PIXEL_SIZE + 2])))
+        data.append(row)
+    return Frame(data)
+
 class Frame:
-    def __init__(self):
+    def __init__(self, data=None):
         self.width = WIDTH
         self.height = HEIGHT
-        self.blank()
+        if data:
+            self.data = data
+        else:
+            self.blank()
+    def save(self, fn):
+        open(fn, 'wb').write(encode(self.data))
+    def copy(self, data):
+        if isinstance(data, Frame): data = data.data
+        self.data = [row[:] for row in data]
     def blank(self):
         self.data = blank()
     def dim(self, amount):
@@ -52,6 +81,8 @@ class Frame:
         show(self.data)
     def fill(self, c):
         self.data = fill(c)
+    def get(self, x, y):
+        return self.data[y][x]
     def point(self, x, y, c):
         self.data[y][x] = c
     def rect(self, x0, y0, x1, y1, c):
