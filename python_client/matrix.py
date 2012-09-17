@@ -1,11 +1,11 @@
-import socket, random
+import socket, random, time
 sock = socket.socket( socket.AF_INET, # Internet
                       socket.SOCK_DGRAM ) # UDP
 
 WIDTH = 25
 HEIGHT = 12
 
-def display(data):
+def show(data):
     output = ['\x01']
     for row in data:
         for pixel in row:
@@ -27,5 +27,107 @@ def blank():
 def random_color():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
+class Frame:
+    def __init__(self):
+        self.width = WIDTH
+        self.height = HEIGHT
+        self.blank()
+    def blank(self):
+        self.data = blank()
+    def dim(self, amount):
+        self.data = [
+            [
+                (int(c[0] * amount), int(c[1] * amount), int(c[2] * amount))
+                for c in row
+            ] for row in self.data
+        ]
+    def subtract(self, amount):
+        self.data = [
+            [
+                (max(0, c[0] - amount), max(0, c[1] - amount), max(0, c[2] - amount))
+                for c in row
+            ] for row in self.data
+        ]
+    def show(self):
+        show(self.data)
+    def fill(self, c):
+        self.data = fill(c)
+    def point(self, x, y, c):
+        self.data[y][x] = c
+    def rect(self, x0, y0, x1, y1, c):
+        if x1 < x0: x0, x1 = x1, x0
+        if y1 < y0: y0, y1 = y1, y0
+        # corners of rectangle: (x0, y0)-(x1, y1)
+        for y in range(y0, y1+1):
+            row = self.data[y]
+            for x in range(x0, x1+1):
+                row[x] = c
+    def line(self, x0, y0, x1, y1, c):
+        # line runs from (x0, y0)-(x1, y1)
+        # this is not very smart about diagonal lines; sometimes it will miss the ends.  a better line algo would be welcome!
+        if x0 == x1:
+            for y in range(min(y0, y1), max(y0, y1) + 1):
+                self.point(x0, y, c)
+        elif y0 == y1:
+            for x in range(min(x0, x1), max(x0, x1) + 1):
+                self.point(x, y0, c)
+        elif abs(x1 - x0) < abs(y1 - y0):
+            # 'tall' line
+            if y1 < y0:
+                x0, x1 = x1, x0
+                y0, y1 = y1, y0
+            for y in range(y0, y1+1):
+                x = (y - y0) * (x1 + 1 - x0) / (y1 + 1 - y0) + x0
+                self.point(x, y, c)
+        else:
+            # 'wide' line
+            if x1 < x0:
+                x0, x1 = x1, x0
+                y0, y1 = y1, y0
+            for x in range(x0, x1+1):
+                y = (x - x0) * (y1 + 1 - y0) / (x1 + 1 - x0) + y0
+                self.point(x, y, c)
+    def box(self, x0, y0, x1, y1, c):
+        self.line(x0, y0, x1, y0, c)
+        self.line(x0, y1, x1, y1, c)
+        self.line(x0, y0, x0, y1, c)
+        self.line(x1, y0, x1, y1, c)
+
 if __name__ == '__main__':
-    display(fill(random_color()))
+    frame_rate = 50
+    class Flipper:
+        def __init__(self):
+            self.last = 0
+        def flip(self, f):
+            now = time.time()
+            print "since last:",now - self.last
+            time.sleep(1.0/frame_rate)
+#            if (now - self.last) < (1.0 / frame_rate):
+#                to_sleep = 1.0 / frame_rate - (now - self.last)
+#                print to_sleep
+#                time.sleep(to_sleep)
+            if hasattr(f, 'show'):
+                f.show()
+            else:
+                show(f)
+            self.last = now
+    flipper = Flipper()
+    f = Frame()
+    def flip():
+        flipper.flip(f)
+    n = 0
+    while 1:
+        n += 1
+        func = {
+            0: f.line,
+            1: f.rect,
+            2: f.box,
+            }[n % 3]
+        #func = f.box
+        func(random.randint(0, WIDTH-1), random.randint(0, HEIGHT-1), random.randint(0, WIDTH-1), random.randint(0, HEIGHT-1), random_color())
+        flip()
+        for x in range(10):
+            flip()
+        for x in range(20):
+            f.dim(0.8)
+            flip()
