@@ -15,6 +15,7 @@ w/a/s/d - shift entire canvas"""
 
     FRAME_RATE = 50
     x = y = 0
+    colour = [255, 255, 255]
     if os.path.exists(fn):
         image = matrix.load(fn)
     else:
@@ -58,22 +59,28 @@ w/a/s/d - shift entire canvas"""
                 else:
                     print "unknown special\r"
             elif c == ' ':
-                image.point(x, y, matrix.BLACK if image.get(x, y) != matrix.BLACK else matrix.WHITE)
+                image.point(x, y, matrix.BLACK if image.get(x, y) == tuple(colour) else tuple(colour))
                 image.save(fn)
             elif c.lower() == 'w': # roll up
                 image.translate(0, -1)
-            elif c.lower() == 'a':
+            elif c.lower() == 'a': # roll left
                 image.translate(-1, 0)
-            elif c.lower() == 's':
+            elif c.lower() == 's': # roll right
                 image.translate(0, 1)
-            elif c.lower() == 'd':
+            elif c.lower() == 'd': # roll down
                 image.translate(1, 0)
+            elif c.lower() == 'r':
+                colour[0] = 0 if colour[0] else 255
+            elif c.lower() == 'g':
+                colour[1] = 0 if colour[1] else 255
+            elif c.lower() == 'b':
+                colour[2] = 0 if colour[2] else 255
             else:
                 print c,"\r"
 
         f.copy(image)
         # draw cursor
-        f.point(x, y, matrix.multiply(matrix.WHITE, 0.5 * math.sin(float(frame) / FRAME_RATE * math.pi) + 0.5))
+        f.point(x, y, matrix.multiply(colour, 0.5 * math.sin(float(frame) / FRAME_RATE * math.pi) + 0.5))
         f.show()
         time.sleep(1.0 / FRAME_RATE)
 
