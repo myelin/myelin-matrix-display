@@ -3,6 +3,10 @@ import termios, fcntl, sys, os
 # from http://stackoverflow.com/questions/983354/how-do-i-make-python-to-wait-for-a-pressed-key
 class KB:
     def __init__(self):
+        self.captured = False
+
+    def capture(self):
+        self.captured = True
         fd = sys.stdin.fileno()
         # save old state
         self.flags_save = fcntl.fcntl(fd, fcntl.F_GETFL)
@@ -27,6 +31,9 @@ class KB:
         fcntl.fcntl(fd, fcntl.F_SETFL, self.flags_save & ~os.O_NONBLOCK)
 
     def restore(self):
+        if not self.captured: return
+
+        self.captured = False
         # restore old state
         fd = sys.stdin.fileno()
         termios.tcsetattr(fd, termios.TCSAFLUSH, self.attrs_save)
@@ -57,4 +64,5 @@ class KB:
         return ret
 kb = KB()
 read = kb.read_single_keypress
+capture = kb.capture
 restore = kb.restore

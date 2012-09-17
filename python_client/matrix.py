@@ -77,6 +77,13 @@ class Frame:
                 for c in row
             ] for row in self.data
         ]
+    def translate(self, xd, yd):
+        self.data = [
+            [
+                self.data[(y - yd + self.height) % self.height][(x - xd + self.width) % self.width]
+                for x in range(self.width)
+            ] for y in range(self.height)
+        ]
     def show(self):
         show(self.data)
     def fill(self, c):

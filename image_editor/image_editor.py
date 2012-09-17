@@ -4,7 +4,14 @@ import matrix
 import kb
 
 def main():
-    fn = 'image.mx'
+    print """arrow keys - move around
+space - toggle current pixel
+w/a/s/d - shift entire canvas"""
+
+    if len(sys.argv) > 1:
+        fn = sys.argv[1]
+    else:
+        fn = 'image.mx'
 
     FRAME_RATE = 50
     x = y = 0
@@ -15,6 +22,8 @@ def main():
     f = matrix.Frame()
     frame = 0
     input = []
+
+    kb.capture() # switch to raw mode
     while 1:
         frame += 1
 
@@ -51,6 +60,14 @@ def main():
             elif c == ' ':
                 image.point(x, y, matrix.BLACK if image.get(x, y) != matrix.BLACK else matrix.WHITE)
                 image.save(fn)
+            elif c.lower() == 'w': # roll up
+                image.translate(0, -1)
+            elif c.lower() == 'a':
+                image.translate(-1, 0)
+            elif c.lower() == 's':
+                image.translate(0, 1)
+            elif c.lower() == 'd':
+                image.translate(1, 0)
             else:
                 print c,"\r"
 
