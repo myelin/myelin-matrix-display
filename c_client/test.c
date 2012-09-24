@@ -8,7 +8,7 @@ void setup_animation() {
 
 void draw_frame(int frame) {
 	set_frame_rate(5);
-  blank();
+	blank();
 	line(pos, 0, pos, HEIGHT, random_color());
-	pos = (pos + 1) % 8;
+	pos = (pos + 1) % WIDTH;
 }
