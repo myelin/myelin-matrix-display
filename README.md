@@ -1,5 +1,5 @@
-Want It! matrix display
-=======================
+Myelin Matrix Display
+=====================
 
 Copyright (C) 2012 Phillip Pearson
 
@@ -8,11 +8,12 @@ You may use this code under a CC Attribution license.
 Introduction
 ------------
 
-The Want It! matrix display is a 25x12 LED matrix, built for Camp Want
-It! at Burning Man 2012 (9:15 and Esplanade).  It consists of 300
-WS2801-controlled 5050 LEDs, mounted on a roughly 6' x 3' board.
+The [Myelin Matrix Display](http://www.myelin.co.nz/matrix-display/)
+is a 25x12 LED matrix, built for Camp Want It! at Burning Man 2012
+(9:15 and Esplanade).  It consists of 300 WS2801-controlled 5050 LEDs,
+mounted on a roughly 6' x 3' board.
 
-An Arduino Duemilanove, running the code in the arduino_matrix_driver
+A Freetronics Etherten, running the code in the arduino_matrix_driver
 folder, is mounted on the board, and is programmed with a number of
 simple lighting programs, which will run if nothing is connected.
 
@@ -20,10 +21,10 @@ Connecting a laptop running the code in the linux_daemon folder and
 sending video frames via the USB serial port will override this,
 allowing more complex patterns.
 
-For extra flexibility, the linux_daemon code also supports the UDP
-protocol used by Disorient's Art Car Wash code, allowing a Processing
-app, or any of the targets in the acw_c_client folder, to control the
-system anywhere on the network.
+For extra flexibility, the linux_daemon the arduino_matrix_driver code
+also support the UDP protocol used by Disorient's Art Car Wash code,
+allowing a Processing app, or any of the targets in the c_client
+folder, to control the system anywhere on the network.
 
 Programming patterns
 --------------------
