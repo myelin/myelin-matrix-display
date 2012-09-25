@@ -15,7 +15,7 @@ void setup_display() {
 }
 
 void send_to_display(unsigned char* buffer, int buffer_len) {
-  int expected_len = BUF_SIZE;
+  int expected_len = BUF_SIZE / OVERSAMPLING / OVERSAMPLING;
   if (buffer_len != expected_len) {
     printf("send_to_display(): incorrect buffer length %d; expected %d\n", buffer_len, expected_len);
     exit(1);
@@ -63,11 +63,17 @@ void dim(int factor) {
   }
 }
 
-void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
+unsigned char* ptr_for_point(int x, int y) {
   int pos = (RGB ? 3 : 0) * (y * WIDTH + x);
-  if (pos > BUF_SIZE) return;
+  if (pos > BUF_SIZE) return NULL;
   unsigned char* ptr = draw_buf + pos;
-  if (ptr < draw_buf || ptr > draw_buf + BUF_SIZE) return;
+  if (ptr < draw_buf || ptr > draw_buf + BUF_SIZE) return NULL;
+  return ptr;
+}
+
+void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
+  unsigned char* ptr = ptr_for_point(x, y);
+  if (ptr == NULL) return;
   if (RGB) {
     *ptr++ = r;
     *ptr++ = g;
@@ -79,6 +85,18 @@ void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
 
 void point(int x, int y, color_t c) {
   point(x, y, (unsigned char)(c >> 16), (unsigned char)(c >> 8), (unsigned char)c);
+}
+
+void point_clip(int x, int y, color_t c) {
+  if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+    point(x, y, c);
+  }
+}
+
+color_t getpoint(int x, int y) {
+  unsigned char* ptr = ptr_for_point(x, y);
+  if (ptr == NULL) return 0; // everything off-canvas is black?
+  return color(*ptr++, *ptr++, *ptr++);
 }
 
 void line(int x0, int y0, int x1, int y1, color_t c) {
@@ -107,6 +125,46 @@ void rect(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsi
 
 void rect(int x0, int y0, int x1, int y1, color_t c) {
   rect(x0, y0, x1, y1, (unsigned char)(c >> 16), (unsigned char)(c >> 8), (unsigned char)c);
+}
+
+// from wikipedia, distributable under cc-a-sa
+void circle(int cx, int cy, int r, color_t c) {
+  int f = 1 - r;
+  int ddF_x = 1;
+  int ddF_y = -2 * r;
+  int x = 0;
+  int y = r;
+
+  point_clip(cx, cy + r, c);
+  point_clip(cx, cy - r, c);
+  point_clip(cx + r, cy, c);
+  point_clip(cx - r, cy, c);
+
+  while(x < y) {
+    // ddF_x == 2 * x + 1;
+    // ddF_y == -2 * y;
+    // f == x*x + y*y - r*r + 2*x - y + 1;
+    if (f >= 0) {
+      y--;
+      ddF_y += 2;
+      f += ddF_y;
+    }
+    x++;
+    ddF_x += 2;
+    f += ddF_x;
+    point_clip(cx + x, cy + y, c);
+    point_clip(cx - x, cy + y, c);
+    point_clip(cx + x, cy - y, c);
+    point_clip(cx - x, cy - y, c);
+    point_clip(cx + y, cy + x, c);
+    point_clip(cx - y, cy + x, c);
+    point_clip(cx + y, cy - x, c);
+    point_clip(cx - y, cy - x, c);
+  }
+}
+
+int randint(int min_inclusive, int max_inclusive) {
+  return rand() % (max_inclusive - min_inclusive + 1) + min_inclusive;
 }
 
 color_t random_color() {
@@ -164,12 +222,38 @@ void blank() {
 }
 
 int main() {
+  sranddev();
   setup_display();
   setup_animation();
   for (int frame = 0; ; ++frame) {
     draw_frame(frame);
     printf("sending frame %d to display\n", frame);
+#if OVERSAMPLING > 1
+#define OUT_W (WIDTH / OVERSAMPLING)
+#define OUT_H (HEIGHT / OVERSAMPLING)
+    unsigned char downsampled_buf[OUT_W * OUT_H * 3];
+    for (int y = 0; y < OUT_H; ++y) {
+      for (int x = 0; x < OUT_W; ++x) {
+	// average OVERSAMPLING x OVERSAMPLING block of pixels from draw_buf into one pixel in downsampled_buf
+	int r = 0, g = 0, b = 0;
+	for (int yd = 0; yd < OVERSAMPLING; ++yd) {
+	  for (int xd = 0; xd < OVERSAMPLING; ++xd) {
+	    color_t c = getpoint(x * OVERSAMPLING + xd, y * OVERSAMPLING + yd);
+	    r += (c >> 16) & 0xFF;
+	    g += (c >> 8) & 0xFF;
+	    b += c & 0xFF;
+	  }
+	}
+	unsigned char* ptr = downsampled_buf + (y * OUT_W + x) * 3;
+	*ptr++ = r / OVERSAMPLING / OVERSAMPLING;
+	*ptr++ = g / OVERSAMPLING / OVERSAMPLING;
+	*ptr++ = b / OVERSAMPLING / OVERSAMPLING;
+      }
+    }
+    send_to_display(downsampled_buf, sizeof(downsampled_buf));
+#else
     send_to_display(draw_buf, sizeof(draw_buf));
+#endif
     usleep(1000000 / frame_rate); //TODO: take into account generate/send time
   }
 }
