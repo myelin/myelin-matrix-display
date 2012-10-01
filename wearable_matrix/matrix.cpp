@@ -4,27 +4,46 @@
 #define draw_buf strip.pixels
 
 void dim(int factor) {
+#ifdef HW_LPD8806
+  for (int i = 0; i < PIXEL_COUNT; ++i) {
+    uint32_t c = strip.getPixelColor(i);
+    uint8_t g = c >> 16, r = c >> 8, b = c;
+    strip.setPixelColor(i, r * factor / 256, g * factor / 256, b * factor / 256);
+  }
+#else
   for (unsigned char* ptr = draw_buf; ptr < draw_buf + BUF_SIZE; ++ptr) {
     *ptr = *ptr * factor / 256;
   }
+#endif
 }
 
 void blank() {
+#ifdef HW_LPD8806
+  for (int i = 0; i < PIXEL_COUNT; ++i) {
+    strip.setPixelColor(i, 0);
+  }
+#else
   memset(draw_buf, 0, BUF_SIZE);
+#endif
 }
 
 void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
 #ifdef HORIZONTAL_ADDRESSING
   // monolithic matrix display (oct 2012) - snaking horizontally from top left corner.  original format, used at burning man 2012.
-  int pos = (y * WIDTH + (y & 1 ? (WIDTH - 1 - x) : x)) * 3;
+  int pos = (y * WIDTH + (y & 1 ? (WIDTH - 1 - x) : x));
 #elif defined VERTICAL_ADDRESSING
   // modular matrix display (sep 2012) - snaking vertically from top left corner, so there's only one connection between each pair of panels, rather than 12.
-  int pos = ((x & 1) ? ((x + 1) * HEIGHT - 1 - y) : (x * HEIGHT + y)) * 3;
+  int pos = ((x & 1) ? ((x + 1) * HEIGHT - 1 - y) : (x * HEIGHT + y));
 #endif
-  if (pos < 0 || pos > BUF_SIZE) return;
+#ifdef ROTATE_180
+  pos = PIXEL_COUNT - 1 - pos;
+#endif
+  if (pos < 0 || pos > PIXEL_COUNT) return;
 
-  unsigned char* ptr = draw_buf + pos;
-  if (ptr < draw_buf || ptr > draw_buf + BUF_SIZE) return;
+#ifdef HW_LPD8806
+  strip.setPixelColor(pos, r >> 1, g >> 1, b >> 1);
+#else
+  unsigned char* ptr = draw_buf + pos * 3;
   if (RGB) {
     *ptr++ = r;
     *ptr++ = g;
@@ -32,6 +51,7 @@ void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
   } else {
     *ptr++ = (r + g + b) / 3;
   }
+#endif
 }
 
 void point(int x, int y, color_t c) {

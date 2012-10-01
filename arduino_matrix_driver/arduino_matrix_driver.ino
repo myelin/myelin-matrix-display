@@ -177,9 +177,16 @@ void loop() {
   if ((now - last_serial_frame) > 500) {
     // if there's data available on the ethernet interface, read a packet
     int packetSize = Udp.parsePacket();
+    uint8_t valid_packet = 0;
     if (packetSize == ETH_WIDTH * ETH_HEIGHT * PIXEL_SIZE + 1) {
-      serial_print("udp\n");
+      valid_packet = 1;
+      // skip first byte
       Udp.read();
+    } else if (packetSize == ETH_WIDTH * ETH_HEIGHT * PIXEL_SIZE) {
+      valid_packet = 1;
+    }
+    if (valid_packet) {
+      serial_print("udp\n");
 #ifdef HORIZONTAL_ADDRESSING
       for (int row = 0; row < 12; row+=2) {
         // read one row forward

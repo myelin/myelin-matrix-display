@@ -17,7 +17,7 @@ void draw_lines(int frame) {
 }
 
 void draw_insane_lines(int frame) {
-  set_frame_rate(30);
+  set_frame_rate(20);
 
   uint32_t c = random_color();
 /*  if (frame & 1) {

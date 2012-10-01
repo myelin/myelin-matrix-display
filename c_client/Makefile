@@ -1,5 +1,5 @@
 CFILES=main.c
-PROJECTS=fade white epilepsy bounce chill strobe chase sweep test rainbow life
+PROJECTS=fade white epilepsy bounce chill strobe chase sweep test rainbow life black
 SPECIALS=ripples
 DEPS=matrix.h
 

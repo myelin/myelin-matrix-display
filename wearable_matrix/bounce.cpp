@@ -14,7 +14,7 @@ class Ball {
     xv = random(-1, 1);
     v = 0;
     c = random_color();
-    delay = random(0, 99);
+    delay = random(0, 20);
   }
   void fall() {
     if (delay) {
@@ -28,8 +28,9 @@ class Ball {
     if (y < 0) {
       // hit the ground
       y = -y;
-      v = -v - 1;
-      if (v < 10) {
+      v = -v - 2;
+      Serial.print("bounce: "); Serial.println(v);
+      if (v < 6) {
 	reset();
       }
     }
@@ -41,7 +42,7 @@ class Ball {
   }
 };
 
-#define N_BALLS 20
+#define N_BALLS 5
 #define BALL_SEPARATION 10
 
 static Ball balls[N_BALLS];

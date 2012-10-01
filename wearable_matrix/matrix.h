@@ -1,14 +1,17 @@
 #include <Arduino.h>
-#ifndef ADAFRUIT_WS2801_INCLUDED
-#define ADAFRUIT_WS2801_INCLUDED
-#include <Adafruit_WS2801.h>
+
+#define HW_LPD8806
+
+#ifndef LED_DRIVER_INCLUDED
+#define LED_DRIVER_INCLUDED
+#include <LPD8806.h>
 #endif
 
-extern Adafruit_WS2801 strip;
+extern LPD8806 strip;
 
 // Display dimensions
-#define WIDTH 25
-#define HEIGHT 12
+#define WIDTH 8
+#define HEIGHT 5
 #define PIXEL_COUNT (WIDTH*HEIGHT)
 // Bytes per pixel
 #define PIXEL_SIZE 3
@@ -17,9 +20,11 @@ extern Adafruit_WS2801 strip;
 #define RGB 1
 
 // original addressing style, used at burning man 2012
-//#define HORIZONTAL_ADDRESSING
+#define HORIZONTAL_ADDRESSING
 // new addressing style, which reduces the number of cable connections between panels down to 1
-#define VERTICAL_ADDRESSING
+//#define VERTICAL_ADDRESSING
+// rotated 180 degrees - as on the wearable mini-matrix
+#define ROTATE_180
 
 typedef uint32_t color_t;
 inline color_t color(uint8_t r, uint8_t g, uint8_t b) {
