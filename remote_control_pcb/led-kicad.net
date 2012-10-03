@@ -1,0 +1,200 @@
+# EESchema Netlist Version 1.1 created  10/2/2012 10:44:16 PM
+(
+ ( /50662268 C1 C1 22p
+  ( 1 N-000026 )
+  ( 2 gnd )
+ )
+ ( /50662270 C1 C2 22p
+  ( 1 N-000027 )
+  ( 2 gnd )
+ )
+ ( /5067365D C1 C4 100n
+  ( 1 gnd )
+  ( 2 3v3 )
+ )
+ ( /50673647 C1 C5 100n
+  ( 1 gnd )
+  ( 2 3v3 )
+ )
+ ( /50673A36 pin_array_3x2 CON1 AVR-ISP-6
+  ( 1 miso )
+  ( 2 3v3 )
+  ( 3 sck )
+  ( 4 mosi )
+  ( 5 avr_reset )
+  ( 6 gnd )
+ )
+ ( /5067360A LED-3MM D1 LED
+  ( 1 N-000033 )
+  ( 2 gnd )
+ )
+ ( /50662096 DIP-28__300 IC1 ATMEGA328P-P
+  ( 1 avr_reset )
+  ( 2 kpad_4 )
+  ( 3 kpad_5 )
+  ( 4 kpad_6 )
+  ( 5 kpad_7 )
+  ( 6 N-000022 )
+  ( 7 3v3 )
+  ( 8 gnd )
+  ( 9 N-000026 )
+  ( 10 N-000027 )
+  ( 11 N-000017 )
+  ( 12 N-000019 )
+  ( 13 N-000020 )
+  ( 14 rf_ce )
+  ( 15 rf_irq )
+  ( 16 rf_csn )
+  ( 17 mosi )
+  ( 18 miso )
+  ( 19 sck )
+  ( 20 3v3 )
+  ( 21 ? )
+  ( 22 gnd )
+  ( 23 ? )
+  ( 24 led_data_3v )
+  ( 25 led_clk_3v )
+  ( 26 kpad_3 )
+  ( 27 kpad_2 )
+  ( 28 kpad_1 )
+ )
+ ( /50675421 ROUND_PIN P1 CONN_1
+  ( 1 led_clk_3v )
+ )
+ ( /506753C3 ROUND_PIN P2 CONN_1
+  ( 1 led_data_3v )
+ )
+ ( /506753C2 ROUND_PIN P3 CONN_1
+  ( 1 rf_csn )
+ )
+ ( /506753C0 ROUND_PIN P4 CONN_1
+  ( 1 rf_irq )
+ )
+ ( /506753BC ROUND_PIN P5 CONN_1
+  ( 1 rf_ce )
+ )
+ ( /50675378 ROUND_PIN P6 CONN_1
+  ( 1 5v )
+ )
+ ( /50675694 SIL-7 P7 keypad
+  ( 1 kpad_1 )
+  ( 2 kpad_2 )
+  ( 3 kpad_3 )
+  ( 4 kpad_4 )
+  ( 5 kpad_5 )
+  ( 6 kpad_6 )
+  ( 7 kpad_7 )
+ )
+ ( /5067996C ROUND_PIN P8 CONN_1
+  ( 1 gnd )
+ )
+ ( /50679968 ROUND_PIN P10 CONN_1
+  ( 1 led_data_5v )
+ )
+ ( /50679962 ROUND_PIN P11 CONN_1
+  ( 1 led_clk_5v )
+ )
+ ( /506BB71F ROUND_PIN P12 CONN_1
+  ( 1 N-000017 )
+ )
+ ( /506BB710 ROUND_PIN P13 CONN_1
+  ( 1 N-000019 )
+ )
+ ( /506BB714 ROUND_PIN P14 CONN_1
+  ( 1 N-000020 )
+ )
+ ( /506BB768 ROUND_PIN P16 CONN_1
+  ( 1 N-000022 )
+ )
+ ( /50662128 R4 R1 R
+  ( 1 3v3 )
+  ( 2 avr_reset )
+ )
+ ( /506735FF R3 R2 R
+  ( 1 sck )
+  ( 2 N-000033 )
+ )
+ ( /506732D4 pin_array_4x2 U1 NRF24L01+
+  ( 1 gnd )
+  ( 2 3v3 )
+  ( 3 rf_ce )
+  ( 4 rf_csn )
+  ( 5 sck )
+  ( 6 mosi )
+  ( 7 miso )
+  ( 8 rf_irq )
+ )
+ ( /506630CC DIP-16__300 U2 CD40109
+  ( 1 3v3 )
+  ( 2 3v3 )
+  ( 3 led_data_3v )
+  ( 4 led_data_5v )
+  ( 5 led_clk_5v )
+  ( 6 led_clk_3v )
+  ( 7 3v3 )
+  ( 8 gnd )
+  ( 9 gnd )
+  ( 10 gnd )
+  ( 11 ? )
+  ( 12 ? )
+  ( 13 ? )
+  ( 14 gnd )
+  ( 15 gnd )
+  ( 16 5v )
+ )
+ ( /506621DE C1V7 X1 8MHz
+  ( 1 N-000026 )
+  ( 2 N-000027 )
+ )
+)
+*
+{ Allowed footprints by component:
+$component C1
+ SM*
+ C?
+ C1-1
+$endlist
+$component C2
+ SM*
+ C?
+ C1-1
+$endlist
+$component C4
+ SM*
+ C?
+ C1-1
+$endlist
+$component C5
+ SM*
+ C?
+ C1-1
+$endlist
+$component D1
+ LED-3MM
+ LED-5MM
+ LED-10MM
+ LED-0603
+ LED-0805
+ LED-1206
+ LEDV
+$endlist
+$component IC1
+ 28DIP-ELL600
+ 28dip600
+$endlist
+$component R1
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$component R2
+ R?
+ SM0603
+ SM0805
+ R?-*
+ SM1206
+$endlist
+$endfootprintlist
+}

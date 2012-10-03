@@ -1,0 +1,185 @@
+Cmp-Mod V01 Created by CvPcb (2012-01-19 BZR 3256)-stable date = 10/2/2012 10:44:16 PM
+
+BeginCmp
+TimeStamp = /50662268;
+Reference = C1;
+ValeurCmp = 22p;
+IdModule  = C1;
+EndCmp
+
+BeginCmp
+TimeStamp = /50662270;
+Reference = C2;
+ValeurCmp = 22p;
+IdModule  = C1;
+EndCmp
+
+BeginCmp
+TimeStamp = /5067365D;
+Reference = C4;
+ValeurCmp = 100n;
+IdModule  = C1;
+EndCmp
+
+BeginCmp
+TimeStamp = /50673647;
+Reference = C5;
+ValeurCmp = 100n;
+IdModule  = C1;
+EndCmp
+
+BeginCmp
+TimeStamp = /50673A36;
+Reference = CON1;
+ValeurCmp = AVR-ISP-6;
+IdModule  = pin_array_3x2;
+EndCmp
+
+BeginCmp
+TimeStamp = /5067360A;
+Reference = D1;
+ValeurCmp = LED;
+IdModule  = LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /50662096;
+Reference = IC1;
+ValeurCmp = ATMEGA328P-P;
+IdModule  = DIP-28__300;
+EndCmp
+
+BeginCmp
+TimeStamp = /50675421;
+Reference = P1;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /506753C3;
+Reference = P2;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /506753C2;
+Reference = P3;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /506753C0;
+Reference = P4;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /506753BC;
+Reference = P5;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /50675378;
+Reference = P6;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /50675694;
+Reference = P7;
+ValeurCmp = keypad;
+IdModule  = SIL-7;
+EndCmp
+
+BeginCmp
+TimeStamp = /5067996C;
+Reference = P8;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /50679968;
+Reference = P10;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /50679962;
+Reference = P11;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /506BB71F;
+Reference = P12;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /506BB710;
+Reference = P13;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /506BB714;
+Reference = P14;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /506BB768;
+Reference = P16;
+ValeurCmp = CONN_1;
+IdModule  = ROUND_PIN;
+EndCmp
+
+BeginCmp
+TimeStamp = /50662128;
+Reference = R1;
+ValeurCmp = R;
+IdModule  = R4;
+EndCmp
+
+BeginCmp
+TimeStamp = /506735FF;
+Reference = R2;
+ValeurCmp = R;
+IdModule  = R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /506732D4;
+Reference = U1;
+ValeurCmp = NRF24L01+;
+IdModule  = pin_array_4x2;
+EndCmp
+
+BeginCmp
+TimeStamp = /506630CC;
+Reference = U2;
+ValeurCmp = CD40109;
+IdModule  = DIP-16__300;
+EndCmp
+
+BeginCmp
+TimeStamp = /506621DE;
+Reference = X1;
+ValeurCmp = 8MHz;
+IdModule  = C1V7;
+EndCmp
+
+EndListe
