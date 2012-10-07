@@ -20,6 +20,13 @@ LPD8806 strip(PIXEL_COUNT);
 
 void setup() {
   Serial.begin(BAUD);
+  Serial.println("Hello!");
+
+  // set up tact switch (between 26-28, PC3-PC5, arduino A3-A5)
+  pinMode(A5, INPUT);
+  digitalWrite(A5, HIGH); // set A5 pullup
+  pinMode(A3, OUTPUT);
+  digitalWrite(A3, LOW); // when the switch is closed, A3 will pull down A5
 
   // cls
   strip.begin();
@@ -43,22 +50,43 @@ extern void draw_insane_lines(int frame);
 extern void draw_epilepsy(int frame);
 extern void draw_rainbow(int frame);
 
+unsigned long last_button_transition = 0;
+int last_button_read = HIGH, button_valid = 1;
+
 void loop() {
   unsigned long now = millis();
+
+  // check mode-switch button
+  int button = digitalRead(A5);
+  if (button != last_button_read) {
+    last_button_read = button;
+    last_button_transition = millis();
+    button_valid = 0;
+  } else if (!button_valid) {
+    if (millis() - last_button_transition > 30) {
+      // register a transition
+      Serial.println("transition");
+      button_valid = 1;
+      if (button == LOW) {
+        ++current_mode;
+      }
+    }
+  }
 
 #define FRAMES_PER_MODE 300
 
   if ((now - last_frame) > ms_per_frame) {
+
     uint8_t handled;
     do {
       handled = 1;
       switch (current_mode) {
-//        case 0: draw_test(current_frame); break;
+        case 0: draw_test(current_frame); break;
         case 1: draw_lines(current_frame); break;
-//        case 2: draw_epilepsy(current_frame); break;
-//        case 3: draw_insane_lines(current_frame); break;
+        case 2: draw_epilepsy(current_frame); break;
+        case 3: draw_insane_lines(current_frame); break;
         case 4: draw_bounce(current_frame); break;
-//        case 5: draw_rainbow(current_frame); break;
+        case 5: draw_rainbow(current_frame); break;
         default:
           handled = 0;
           if (++current_mode > 10) current_mode = 0;
@@ -66,10 +94,8 @@ void loop() {
       }
     } while (!handled);
     strip.show();
-    if (++current_frame >= FRAMES_PER_MODE) {
-      ++current_mode;
-      current_frame = 0;
-    }
+    ++current_frame;
+
     last_frame = now;
   }
 
