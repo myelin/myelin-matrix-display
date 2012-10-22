@@ -41,42 +41,30 @@ EthernetUDP Udp;
 #define BAUD 115200
 // Pins that connect to the WS2801 string (must be on PORTD)
 #ifdef MATRIX_V2
+#define WS2801_PORT PORTC
 #define WS2801_DATA PORTC1
 #define WS2801_CLOCK PORTC2
+#define WS2801_ARDUINO_DATA A1
+#define WS2801_ARDUINO_CLOCK A2
 #else
+#define WS2801_PORT PORTD
 #define WS2801_DATA PORTD2
 #define WS2801_CLOCK PORTD4
+#define WS2801_ARDUINO_DATA 4
+#define WS2801_ARDUINO_CLOCK 6
 #endif
 
 // LED control
-Adafruit_WS2801_PP strip = Adafruit_WS2801_PP(PIXEL_COUNT, WS2801_DATA, WS2801_CLOCK);
+Adafruit_WS2801_PP strip = Adafruit_WS2801_PP(PIXEL_COUNT, WS2801_ARDUINO_DATA, WS2801_ARDUINO_CLOCK);
 
 // quickly (6.25ms) bit-bang 900 bytes into the ws2801 strip
 void fast_show() {
-/*
-  uint8_t clkpinmask  = digitalPinToBitMask(clockPin);
-  uint8_t datapinmask = digitalPinToBitMask(dataPin);
-  uint8_t resetmask = ~(clkpinmask | datapinmask);
-*/
-#ifdef MATRIX_V2
-// Raspberry Pi daughterboard
-#define LED_PORT PORTC
-// clock pin PORTC2
-#define clkpinmask 0x04
-// data pin PORTC1
-#define datapinmask 0x02
-#else
-// original Etherten-based matrix
-#define LED_PORT PORTD
-// clock pin PORTD4 (avr pin 6, arduino pin 4)
-#define clkpinmask 0x10
-// data pin PORTD2 (avr pin 4, arduino pin 2)
-#define datapinmask 0x04
-#endif
+#define clkpinmask (1 << WS2801_CLOCK)
+#define datapinmask (1 << WS2801_DATA)
 
   for (uint8_t *stop_ptr = strip.pixels + strip.numPixels() * 3,  *pixel = strip.pixels; pixel != stop_ptr; ++pixel) {
     uint8_t pixel_value = *pixel;
-#define BANG_WS2801_BIT(bit) if (pixel_value & bit) LED_PORT |= datapinmask; else LED_PORT &= ~datapinmask; LED_PORT |= clkpinmask; LED_PORT &= ~clkpinmask
+#define BANG_WS2801_BIT(bit) if (pixel_value & bit) WS2801_PORT |= datapinmask; else WS2801_PORT &= ~datapinmask; WS2801_PORT |= clkpinmask; WS2801_PORT &= ~clkpinmask
     BANG_WS2801_BIT(0x80);
     BANG_WS2801_BIT(0x40);
     BANG_WS2801_BIT(0x20);
@@ -87,8 +75,11 @@ void fast_show() {
     BANG_WS2801_BIT(0x01);
   }
 
-  PORTD &= ~datapinmask;
+  WS2801_PORT &= ~datapinmask;
   delay(1);
+
+#undef datapinmask
+#undef clkpinmask
 }
 
 // byte available to read from the UART?
