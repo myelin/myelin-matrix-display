@@ -1,0 +1,4 @@
+#!/bin/sh
+
+`dirname $0`/stop_daughterboard
+`dirname $0`/start_daughterboard
