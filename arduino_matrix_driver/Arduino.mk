@@ -345,7 +345,7 @@ LIB_OBJS      = $(patsubst $(ARDUINO_LIB_PATH)/%.c,$(OBJDIR)/libs/%.o,$(LIB_C_SR
 CPPFLAGS      = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DARDUINO=$(ARDUINO_VERSION) \
 			-I. -I$(ARDUINO_CORE_PATH) -I$(ARDUINO_VAR_PATH)/$(VARIANT) \
 			$(SYS_INCLUDES) -g -Os -w -Wall \
-			-ffunction-sections -fdata-sections
+			-ffunction-sections -fdata-sections $(EXTRACPPFLAGS)
 CFLAGS        = -std=gnu99
 CXXFLAGS      = -fno-exceptions
 ASFLAGS       = -mmcu=$(MCU) -I. -x assembler-with-cpp
@@ -456,8 +456,14 @@ $(OBJDIR)/%.sym: $(OBJDIR)/%.elf
 ifndef AVRDUDE
 AVRDUDE          = $(AVR_TOOLS_PATH)/avrdude
 endif
+ifdef AVRDUDE_USE_SUDO
+AVRDUDE_SUDO = sudo
+endif
 
-AVRDUDE_COM_OPTS = -q -V -p $(MCU)
+AVRDUDE_COM_OPTS = -V -p $(MCU)
+ifndef AVRDUDE_VERBOSE
+AVRDUDE_COM_OPTS += -q
+endif
 ifdef AVRDUDE_CONF
 AVRDUDE_COM_OPTS += -C $(AVRDUDE_CONF)
 endif
@@ -468,7 +474,11 @@ ifndef ISP_PROG
 ISP_PROG	   = -c stk500v2
 endif
 
-AVRDUDE_ISP_OPTS = -P $(ISP_PORT) $(ISP_PROG)
+AVRDUDE_ISP_OPTS = $(ISP_PROG)
+
+ifdef ISP_PORT
+AVRDUDE_ISP_OPTS += -P $(ISP_PORT)
+endif
 
 
 ########################################################################
@@ -493,13 +503,13 @@ $(DEP_FILE):	$(OBJDIR) $(DEPS)
 upload:		reset raw_upload
 
 raw_upload:	$(TARGET_HEX)
-		$(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ARD_OPTS) \
+		$(AVRDUDE_SUDO) $(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ARD_OPTS) \
 			-U flash:w:$(TARGET_HEX):i
 
 # BSD stty likes -F, but GNU stty likes -f/--file.  Redirecting
 # stdin/out appears to work but generates a spurious error on MacOS at
 # least. Perhaps it would be better to just do it in perl ?
-reset:		
+reset:
 		for STTYF in 'stty -F' 'stty --file' 'stty -f' 'stty <' ; \
 		  do $$STTYF /dev/tty >/dev/null 2>&1 && break ; \
 		done ; \
@@ -508,15 +518,15 @@ reset:
 		$$STTYF $(ARD_PORT) -hupcl 
 
 ispload:	$(TARGET_HEX)
-		$(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) -e \
+		$(AVRDUDE_SUDO) $(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) -e \
 			-U lock:w:$(ISP_LOCK_FUSE_PRE):m \
 			-U hfuse:w:$(ISP_HIGH_FUSE):m \
 			-U lfuse:w:$(ISP_LOW_FUSE):m \
 			-U efuse:w:$(ISP_EXT_FUSE):m
-		$(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) -D \
+		$(AVRDUDE_SUDO) $(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) -D \
 			-U flash:w:$(TARGET_HEX):i
-		$(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) \
-			-U lock:w:$(ISP_LOCK_FUSE_POST):m
+#		$(AVRDUDE_SUDO) $(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) \
+#			-U lock:w:$(ISP_LOCK_FUSE_POST):m
 
 clean:
 		$(REMOVE) $(LOCAL_OBJS) $(CORE_OBJS) $(LIB_OBJS) $(CORE_LIB) $(TARGETS) $(DEP_FILE) $(DEPS)

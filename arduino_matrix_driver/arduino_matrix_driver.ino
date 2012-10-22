@@ -1,11 +1,18 @@
 /*
- * Driver for Want It! matrix display
+ * Driver for Myelin matrix display
  * (c) 2012 Phillip Pearson
  * Ethernet additions by Philip Lindsay
+ *
+ * Matrix display versions:
+ * V1 (nothing defined) - powered by a Freetronics Etherten at 16MHz.  Accepts frames over serial port or Ethernet, or generates an animation internally.
+ * V2 (MATRIX_V2 defined) - powered by a Raspberry Pi, connected to a daughterboard with an ATMEGA328, which takes over while the RPi is booting (after which it puts the AVR into reset)
  */
 
+#ifndef MATRIX_V2
+// Matrix V2 doesn't have serial or Ethernet interfaces
 #define MX_USE_SERIAL
 #define MX_USE_ETHERNET
+#endif
 
 #include <SPI.h>         // needed for Arduino versions later than 0018
 #include <Adafruit_WS2801.h>
@@ -25,8 +32,10 @@ unsigned int localPort = 58082;      // local port to listen on
 EthernetUDP Udp;
 #endif
 
-// Duemilanove has an LED on pin 13 
+#ifndef MATRIX_V2
+// Arduino boards have an LED on pin 13 (SCK)
 #define LED 13
+#endif
 
 // comms speed
 //#define BAUD 1000000
@@ -45,14 +54,25 @@ void fast_show() {
   uint8_t datapinmask = digitalPinToBitMask(dataPin);
   uint8_t resetmask = ~(clkpinmask | datapinmask);
 */
+#ifdef MATRIX_V2
+// Raspberry Pi daughterboard
+#define LED_PORT PORTC
+// clock pin PORTC2
+#define clkpinmask 0x04
+// data pin PORTC1
+#define datapinmask 0x02
+#else
+// original Etherten-based matrix
+#define LED_PORT PORTD
 // clock pin PORTD4 (avr pin 6, arduino pin 4)
 #define clkpinmask 0x10
 // data pin PORTD2 (avr pin 4, arduino pin 2)
 #define datapinmask 0x04
+#endif
 
   for (uint8_t *stop_ptr = strip.pixels + strip.numPixels() * 3,  *pixel = strip.pixels; pixel != stop_ptr; ++pixel) {
     uint8_t pixel_value = *pixel;
-#define BANG_WS2801_BIT(bit) if (pixel_value & bit) PORTD |= datapinmask; else PORTD &= ~datapinmask; PORTD |= clkpinmask; PORTD &= ~clkpinmask
+#define BANG_WS2801_BIT(bit) if (pixel_value & bit) LED_PORT |= datapinmask; else LED_PORT &= ~datapinmask; LED_PORT |= clkpinmask; LED_PORT &= ~clkpinmask
     BANG_WS2801_BIT(0x80);
     BANG_WS2801_BIT(0x40);
     BANG_WS2801_BIT(0x20);
@@ -160,8 +180,10 @@ void loop() {
       // push current pattern to the LEDs
       fast_show();
 
+#ifdef LED
       // toggle the LED (debugging)
       digitalWrite(LED, !digitalRead(LED));
+#endif
 
       // let the host know we're ready again
       serial_print("OK.\n");
