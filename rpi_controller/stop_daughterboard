@@ -1,0 +1,3 @@
+#!/bin/sh
+
+`dirname $0`/output 23 0

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+gpio=$1
+
+echo "Tristating GPIO$gpio"
+echo $gpio > /sys/class/gpio/export
+echo in > /sys/class/gpio/gpio$gpio/direction
+echo $gpio > /sys/class/gpio/unexport
