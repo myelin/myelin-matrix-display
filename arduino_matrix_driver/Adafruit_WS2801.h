@@ -1,3 +1,6 @@
+#ifndef ADAFRUIT_WS2801_PP_INCLUDED
+#define ADAFRUIT_WS2801_PP_INCLUDED
+
 #if (ARDUINO >= 100)
  #include <Arduino.h>
 #else
@@ -13,18 +16,18 @@
 #define WS2801_RGB 0
 #define WS2801_GRB 1
 
-class Adafruit_WS2801 {
+class Adafruit_WS2801_PP {
 
  public:
 
   // Configurable pins:
-  Adafruit_WS2801(uint16_t n, uint8_t dpin, uint8_t cpin, uint8_t order=WS2801_RGB);
+  Adafruit_WS2801_PP(uint16_t n, uint8_t dpin, uint8_t cpin, uint8_t order=WS2801_RGB);
   // Use SPI hardware; specific pins only:
-  Adafruit_WS2801(uint16_t n, uint8_t order=WS2801_RGB);
+  Adafruit_WS2801_PP(uint16_t n, uint8_t order=WS2801_RGB);
   // Empty constructor; init pins/strand length/data order later:
-  Adafruit_WS2801();
+  Adafruit_WS2801_PP();
   // Release memory (as needed):
-  ~Adafruit_WS2801();
+  ~Adafruit_WS2801_PP();
 
   void
     begin(void),
@@ -60,3 +63,6 @@ class Adafruit_WS2801 {
     hardwareSPI, // If 'true', using hardware SPI
     begun;       // If 'true', begin() method was previously invoked
 };
+
+#endif // ADAFRUIT_WS2801_PP_INCLUDED
+

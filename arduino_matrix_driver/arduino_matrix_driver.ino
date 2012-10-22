@@ -15,8 +15,7 @@
 #endif
 
 #include <SPI.h>         // needed for Arduino versions later than 0018
-#include <Adafruit_WS2801.h>
-#define ADAFRUIT_WS2801_INCLUDED
+#include "Adafruit_WS2801.h"
 #include "matrix.h"
 #ifdef MX_USE_ETHERNET
 #include <Ethernet.h>
@@ -41,11 +40,16 @@ EthernetUDP Udp;
 //#define BAUD 1000000
 #define BAUD 115200
 // Pins that connect to the WS2801 string (must be on PORTD)
+#ifdef MATRIX_V2
+#define WS2801_DATA PORTC1
+#define WS2801_CLOCK PORTC2
+#else
 #define WS2801_DATA PORTD2
 #define WS2801_CLOCK PORTD4
+#endif
 
 // LED control
-Adafruit_WS2801 strip = Adafruit_WS2801(PIXEL_COUNT, WS2801_DATA, WS2801_CLOCK);
+Adafruit_WS2801_PP strip = Adafruit_WS2801_PP(PIXEL_COUNT, WS2801_DATA, WS2801_CLOCK);
 
 // quickly (6.25ms) bit-bang 900 bytes into the ws2801 strip
 void fast_show() {

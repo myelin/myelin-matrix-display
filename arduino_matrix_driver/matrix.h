@@ -1,10 +1,7 @@
 #include <Arduino.h>
-#ifndef ADAFRUIT_WS2801_INCLUDED
-#define ADAFRUIT_WS2801_INCLUDED
-#include <Adafruit_WS2801.h>
-#endif
+#include "Adafruit_WS2801.h"
 
-extern Adafruit_WS2801 strip;
+extern Adafruit_WS2801_PP strip;
 
 // Display dimensions
 #define WIDTH 25
