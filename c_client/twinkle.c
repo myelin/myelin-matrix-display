@@ -1,6 +1,9 @@
 #include "matrix.h"
 #include <math.h>
 
+#define INITIAL_MAX 1
+#define FADE_RATE 5
+
 class Twinkle {
  public:
   int x, y;
@@ -10,7 +13,7 @@ class Twinkle {
   int update() {
     double brightness = sin((double)phase / 255.0 * M_PI);
     point(x, y, color_mult(c, brightness));
-    phase += 10;
+    phase += FADE_RATE;
     if (phase > 255) return 1;
     return 0;
   }
@@ -26,7 +29,7 @@ void add_twinkle() {
   Twinkle r;
   r.x = randint(0, WIDTH-1);
   r.y = randint(0, HEIGHT-1);
-  r.c = random_color();
+  r.c = color_mult(random_color(), INITIAL_MAX);
   twinkles.push_back(r);
 }
 
