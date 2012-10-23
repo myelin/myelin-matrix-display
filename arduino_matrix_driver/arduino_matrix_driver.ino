@@ -8,8 +8,11 @@
  * V2 (MATRIX_V2 defined) - powered by a Raspberry Pi, connected to a daughterboard with an ATMEGA328, which takes over while the RPi is booting (after which it puts the AVR into reset)
  */
 
-#ifndef MATRIX_V2
-// Matrix V2 doesn't have serial or Ethernet interfaces
+#ifdef MATRIX_V2
+// Matrix V2 has SPI input only
+//#define MX_USE_SPI_INPUT
+#else
+// Matrix V1 has ethernet and serial input
 #define MX_USE_SERIAL
 #define MX_USE_ETHERNET
 #endif
@@ -111,6 +114,22 @@ void setup() {
   Udp.begin(localPort);
 #endif
 
+//#define SPI_INTR
+#ifdef MX_USE_SPI_INPUT
+  // Set SPI to slave at 2 MHz (as max speed is F_CPU/4 when in slave mode), with mode 0 (positive clock, sample on rising clock edge)
+  SPSR = 0;
+  SPCR = (1<<SPE);
+#ifdef SPI_INTR
+  SPCR |= (1<<SPIE); // if interrupt driven
+#endif
+  // Set SPI input pins (B5 SCK, B3 MOSI, B2 SS) as inputs
+  DDRB &= (1<<PORTB5) | (1<<PORTB4) | (1<<PORTB3) | (1<<PORTB2);
+  // Set MISO as an output (when /SS is active)
+  DDRB |= (1<<PORTB4);
+  // Pull-up on /SS
+  //PORTB |= (1<<PORTB2);
+#endif
+
   // set LEDs weakly on in R/G/B pattern.
   strip.begin();
   uint8_t c = random(0, 255);
@@ -151,8 +170,81 @@ extern void draw_insane_lines(int frame);
 extern void draw_epilepsy(int frame);
 extern void draw_rainbow(int frame);
 
+// /SS pin is active -- transmission is over or cancelled if !spi_selected()
+#define spi_selected() (!(PINB & (1<<PORTB2)))
+// byte available on SPI port
+#define spi_available() (SPSR & (1<<SPIF))
+// get byte from SPI
+#define spi_read() (SPDR)
+// put response byte into SPI reg
+#define spi_put(b) (SPDR = (b))
+
+#ifdef SPI_INTR
+volatile uint16_t seq = 0;
+
+ISR (SPI_STC_vect) {
+  if (seq < 900) {
+    strip.pixels[seq++] = SPDR;
+  }
+}
+#endif
+
 void loop() {
   unsigned long now = millis();
+
+#ifdef MX_USE_SPI_INPUT
+  // Could not get this working well -- at anything about 250 kHz, the avr would completely fall behind, and
+  // even then, there would be tons of static on the output.  switched to just driving the leds straight from
+  // the RPi (spi channel 0, although CE0 is actually connected to /SS on the AVR).
+  /*
+#ifdef SPI_INTR
+  while (1) {
+    if (!spi_selected()) {
+      if (seq == 900) {
+	SPDR = seq & 0xff;
+	fast_show();
+	while (spi_selected()); // skip next transfer if one is in progress, otherwise we'll get a partial frame
+	seq = 0;
+      }
+    }
+  }
+#else
+  uint16_t seq = 0;
+  while (1) {
+    while (!spi_available());
+    strip.pixels[seq++] = SPDR;
+    if (seq == 900) {
+      fast_show();
+      seq = 0;
+    }
+  }
+#endif
+  */
+
+  if (spi_selected()) {
+    // handle SPI input first
+
+    // sync -- the master will send a bunch of zeros to give us time to notice /SS, then a 1, then the data
+    while (spi_selected()) {
+      if (spi_available()) {
+	if (SPDR == 1) break;
+      }
+    }
+
+    // read data - 4 * 225 = 900 bytes; trying to keep it all 8-bit
+    unsigned char* ptr = strip.pixels;
+    for (uint8_t x = 0; x < 4; ++x) {
+      for (uint8_t c = 0; c < 225; ++c) {
+	while (!spi_available()); *ptr++ = SPDR;
+      }
+    }
+
+    // some way of detecting that it took too long?  compare millis from start to finish?
+    fast_show();
+
+    last_serial_frame = now; // stick to spi for a bit
+  }
+#endif
 
 #ifdef MX_USE_SERIAL
   // handle serial input first, because we need to busy-wait on that
@@ -162,28 +254,28 @@ void loop() {
     for (uint8_t header_pos = 0; header_pos < 4; ++header_pos) {
       while (!serial_available());
       if (serial_read() != (header_pos < 2 ? '*' : '+')) return; // anything other than the preamble will kick us back out so we can pick up udp packets again
+    }
 
-      // let the host know we received the preamble
-      serial_print("#");
+    // let the host know we received the preamble
+    serial_print("#");
 
-      // read pixel data
-      for (uint16_t current_pixel = 0; current_pixel < BUF_SIZE; ++current_pixel) {
-        while (!serial_available());
-        strip.pixels[current_pixel] = (uint8_t)serial_read();
-      }
+    // read pixel data
+    for (uint16_t current_pixel = 0; current_pixel < BUF_SIZE; ++current_pixel) {
+      while (!serial_available());
+      strip.pixels[current_pixel] = (uint8_t)serial_read();
+    }
 
-      // push current pattern to the LEDs
-      fast_show();
+    // push current pattern to the WS2801s
+    fast_show();
 
 #ifdef LED
-      // toggle the LED (debugging)
-      digitalWrite(LED, !digitalRead(LED));
+    // toggle the LED (debugging)
+    digitalWrite(LED, !digitalRead(LED));
 #endif
 
-      // let the host know we're ready again
-      serial_print("OK.\n");
-      last_serial_frame = now; // don't listen on ethernet for 500 ms or so
-    }
+    // let the host know we're ready again
+    serial_print("OK.\n");
+    last_serial_frame = now; // don't listen on ethernet for 500 ms or so
   }
 #endif // MX_USE_SERIAL
 
@@ -239,7 +331,7 @@ void loop() {
 //#define WANT_IT_2012
 #define JUST_BOUNCE
 
-  if ((now - last_ethernet_frame) > 500 && (now - last_frame) > ms_per_frame) {
+  if ((now - last_serial_frame) > 500 && (now - last_ethernet_frame) > 500 && (now - last_frame) > ms_per_frame) {
     uint8_t handled;
     do {
       handled = 1;

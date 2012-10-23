@@ -222,8 +222,11 @@ ifndef BOARDS_TXT
 BOARDS_TXT  = $(ARDUINO_DIR)/hardware/arduino/boards.txt
 endif
 
+ifndef ARD_PARSE_BOARDS
+ARD_PARSE_BOARDS = ard-parse-boards
+endif
 ifndef PARSE_BOARD
-PARSE_BOARD = ard-parse-boards --boards_txt=$(BOARDS_TXT)
+PARSE_BOARD = $(ARD_PARSE_BOARDS) --boards_txt=$(BOARDS_TXT)
 endif
 
 # Which variant ? This affects the include path
@@ -342,14 +345,18 @@ LIB_OBJS      = $(patsubst $(ARDUINO_LIB_PATH)/%.c,$(OBJDIR)/libs/%.o,$(LIB_C_SR
 		$(patsubst $(USER_LIB_PATH)/%.c,$(OBJDIR)/libs/%.o,$(USER_LIB_C_SRCS))
 
 
+ifndef OPTIMIZATION
+OPTIMIZATION = -Os
+endif
+
 CPPFLAGS      = -mmcu=$(MCU) -DF_CPU=$(F_CPU) -DARDUINO=$(ARDUINO_VERSION) \
 			-I. -I$(ARDUINO_CORE_PATH) -I$(ARDUINO_VAR_PATH)/$(VARIANT) \
-			$(SYS_INCLUDES) -g -Os -w -Wall \
+			$(SYS_INCLUDES) -g $(OPTIMIZATION) -w -Wall \
 			-ffunction-sections -fdata-sections $(EXTRACPPFLAGS)
 CFLAGS        = -std=gnu99
 CXXFLAGS      = -fno-exceptions
 ASFLAGS       = -mmcu=$(MCU) -I. -x assembler-with-cpp
-LDFLAGS       = -mmcu=$(MCU) -Wl,--gc-sections -Os
+LDFLAGS       = -mmcu=$(MCU) -Wl,--gc-sections $(OPTIMIZATION)
 
 # Expand and pick the first port
 ARD_PORT      = $(firstword $(wildcard $(ARDUINO_PORT)))
