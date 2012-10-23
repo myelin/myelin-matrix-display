@@ -1,6 +1,6 @@
 #!/bin/sh
 
 here=`dirname $0`
-for gpio in 7 9 10 11 17 18 24 25 23; do
+for gpio in 7 8 9 10 11 17 18 24 25 23; do
     $here/tristate $gpio
 done
