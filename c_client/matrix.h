@@ -13,14 +13,19 @@ using namespace std;
 #ifndef OVERSAMPLING
 #define OVERSAMPLING 1
 #endif
+extern int oversampling; // defaults to 1
+
+#define OUT_W 25
+#define OUT_H 12
+#define OUT_BUF_SIZE (OUT_W * OUT_H * (RGB ? 3 : 1))
 
 // arduino compatibility
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 
 // want it! matrix
-#define WIDTH (25 * OVERSAMPLING)
-#define HEIGHT (12 * OVERSAMPLING)
+#define WIDTH (OUT_W * oversampling)
+#define HEIGHT (OUT_H * oversampling)
 #define RGB 1
 extern int frame_rate;
 
@@ -56,5 +61,8 @@ inline color_t color_mult(color_t c, double factor) {
 extern void set_frame_rate(int rate);
 extern color_t wheel(uint16_t pos);
 extern void circle(int cx, int cy, int r, color_t c);
+
+extern void vertical_snake_transform();
+extern void late_vertical_snake_transform();
 
 #endif // __MATRIX_H

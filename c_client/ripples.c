@@ -54,4 +54,7 @@ void draw_frame(int frame) {
     }
     it = next;
   }
+
+  //vertical_snake_transform();
+  late_vertical_snake_transform();
 }

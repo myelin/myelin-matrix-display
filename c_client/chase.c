@@ -7,7 +7,7 @@ void setup_animation() {
 }
 
 void draw_frame(int frame) {
-  blank();
-  point(pos, 0, (unsigned char)rand(), (unsigned char)rand(), (unsigned char)rand());
+  dim(150);
+  point(pos, 0, 0xFFFFFF);
   pos = (pos + 1) % PIXEL_COUNT;
 }

@@ -9,7 +9,7 @@ clean:
 	rm -rf $(PROJECTS) $(SPECIALS) *~ *.dSYM
 
 ripples: ripples.c $(CFILES) $(DEPS)
-	g++ -o ripples -DOVERSAMPLING=4 main.c ripples.c
+	g++ -Wall -O2 -o ripples -DOVERSAMPLING=4 main.c ripples.c
 
 $(PROJECTS): %: %.c $(CFILES) $(DEPS)
 	g++ -Wall -O2 -g -o $@ $< $(CFILES)

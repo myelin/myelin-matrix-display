@@ -1,6 +1,8 @@
 #include "matrix.h"
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <time.h>
+#include <sys/time.h>
 #include <arpa/inet.h>
 
 static int udp_fd;
@@ -15,7 +17,7 @@ void setup_display() {
 }
 
 void send_to_display(unsigned char* buffer, int buffer_len) {
-  int expected_len = BUF_SIZE / OVERSAMPLING / OVERSAMPLING;
+  int expected_len = OUT_BUF_SIZE;
   if (buffer_len != expected_len) {
     printf("send_to_display(): incorrect buffer length %d; expected %d\n", buffer_len, expected_len);
     exit(1);
@@ -43,13 +45,19 @@ void send_to_display(unsigned char* buffer, int buffer_len) {
   // and to want it! matrix
   inet_aton("192.168.1.99", &addr.sin_addr); // localhost
   sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
+
+  // to matrix v2 (raspberry pi)
+  inet_aton("192.168.1.105", &addr.sin_addr); // localhost
+  sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
 }
 
 // implemented by the particular animation we're compiling
 extern void setup_animation();
 extern void draw_frame(int frame);
 
-static unsigned char draw_buf[BUF_SIZE];
+int oversampling = OVERSAMPLING;
+static unsigned char *main_draw_buf;
+static unsigned char *draw_buf;
 
 int frame_rate = 30;
 
@@ -96,7 +104,10 @@ void point_clip(int x, int y, color_t c) {
 color_t getpoint(int x, int y) {
   unsigned char* ptr = ptr_for_point(x, y);
   if (ptr == NULL) return 0; // everything off-canvas is black?
-  return color(*ptr++, *ptr++, *ptr++);
+  uint8_t r = *ptr++;
+  uint8_t g = *ptr++;
+  uint8_t b = *ptr++;
+  return color(r, g, b);
 }
 
 void line(int x0, int y0, int x1, int y1, color_t c) {
@@ -218,42 +229,101 @@ color_t wheel(uint16_t pos) {
 }
 
 void blank() {
-  bzero(draw_buf, sizeof(draw_buf));
+  bzero(draw_buf, BUF_SIZE);
 }
 
-int main() {
-  sranddev();
-  setup_display();
-  setup_animation();
-  for (int frame = 0; ; ++frame) {
-    draw_frame(frame);
-    printf("sending frame %d to display\n", frame);
-#if OVERSAMPLING > 1
-#define OUT_W (WIDTH / OVERSAMPLING)
-#define OUT_H (HEIGHT / OVERSAMPLING)
-    unsigned char downsampled_buf[OUT_W * OUT_H * 3];
-    for (int y = 0; y < OUT_H; ++y) {
-      for (int x = 0; x < OUT_W; ++x) {
-	// average OVERSAMPLING x OVERSAMPLING block of pixels from draw_buf into one pixel in downsampled_buf
-	int r = 0, g = 0, b = 0;
-	for (int yd = 0; yd < OVERSAMPLING; ++yd) {
-	  for (int xd = 0; xd < OVERSAMPLING; ++xd) {
-	    color_t c = getpoint(x * OVERSAMPLING + xd, y * OVERSAMPLING + yd);
-	    r += (c >> 16) & 0xFF;
-	    g += (c >> 8) & 0xFF;
-	    b += c & 0xFF;
-	  }
-	}
-	unsigned char* ptr = downsampled_buf + (y * OUT_W + x) * 3;
-	*ptr++ = r / OVERSAMPLING / OVERSAMPLING;
-	*ptr++ = g / OVERSAMPLING / OVERSAMPLING;
-	*ptr++ = b / OVERSAMPLING / OVERSAMPLING;
+// some effects look amazing if we send an image intended for a progressive scan display
+// to a vertically snaked display without transformation.  this will imitate that.
+static unsigned char *vert_snake_buf;
+void vertical_snake_transform(int w, int h, int buf_size) {
+  unsigned char input[buf_size];
+  memcpy(input, draw_buf, buf_size);
+
+  // we're transforming, so we don't want to do this on main_draw_buf
+  draw_buf = vert_snake_buf;
+
+  unsigned char* ptr = input;
+  for (int x = 0; x < w; ++x) {
+    if (x & 1) {
+      // draw upwards
+      for (int y = h - 1; y >= 0; --y, ptr += 3) {
+	point(x, y, ptr[0], ptr[1], ptr[2]);
+      }
+    } else {
+      // draw downward
+      for (int y = 0; y < h; ++y, ptr += 3) {
+	point(x, y, ptr[0], ptr[1], ptr[2]);
       }
     }
-    send_to_display(downsampled_buf, sizeof(downsampled_buf));
-#else
-    send_to_display(draw_buf, sizeof(draw_buf));
-#endif
-    usleep(1000000 / frame_rate); //TODO: take into account generate/send time
+  }
+}
+void vertical_snake_transform() { vertical_snake_transform(WIDTH, HEIGHT, BUF_SIZE); }
+
+// flag to say whether we should do a vertical snake transform before display
+static int late_vertical_snake;
+
+void late_vertical_snake_transform() { late_vertical_snake = 1; }
+
+int main() {
+  main_draw_buf = new unsigned char[BUF_SIZE];
+  vert_snake_buf = new unsigned char[BUF_SIZE];
+  //  sranddev();
+  setup_display();
+  setup_animation();
+  struct timeval last, start, now;
+  gettimeofday(&last, NULL);
+  for (int frame = 0; ; ++frame) {
+    gettimeofday(&start, NULL);
+    oversampling = OVERSAMPLING;
+    draw_buf = main_draw_buf;
+    late_vertical_snake = 0;
+    draw_frame(frame);
+    printf("sending frame %d to display\n", frame);
+    if (oversampling > 1) {
+      unsigned char downsampled_buf[OUT_BUF_SIZE];
+      for (int y = 0; y < OUT_H; ++y) {
+	for (int x = 0; x < OUT_W; ++x) {
+	  // average oversampling x oversampling block of pixels from draw_buf into one pixel in downsampled_buf
+	  int r = 0, g = 0, b = 0;
+	  for (int yd = 0; yd < oversampling; ++yd) {
+	    for (int xd = 0; xd < oversampling; ++xd) {
+	      color_t c = getpoint(x * oversampling + xd, y * oversampling + yd);
+	      r += (c >> 16) & 0xFF;
+	      g += (c >> 8) & 0xFF;
+	      b += c & 0xFF;
+	    }
+	  }
+	  unsigned char* ptr = downsampled_buf + (y * OUT_W + x) * 3;
+	  *ptr++ = r / oversampling / oversampling;
+	  *ptr++ = g / oversampling / oversampling;
+	  *ptr++ = b / oversampling / oversampling;
+	}
+      }
+      draw_buf = downsampled_buf;
+      oversampling = 1; // here's where it gets complicated...
+    }
+    if (late_vertical_snake) vertical_snake_transform(OUT_W, OUT_H, OUT_BUF_SIZE);
+
+    gettimeofday(&now, NULL);
+    long us_elapsed = (now.tv_sec - last.tv_sec) * 1000000 + now.tv_usec - last.tv_usec;
+    long us_drawing = (now.tv_sec - start.tv_sec) * 1000000 + now.tv_usec - start.tv_usec;
+    long desired_delay = 1000000 / frame_rate;
+    printf("frame took %ld us (%ld to draw), c.f. max frame time %ld, so we should delay %ld us\n", us_elapsed, us_drawing, desired_delay, desired_delay - us_elapsed);
+    if (desired_delay > us_elapsed) {
+      struct timeval a, b;
+      gettimeofday(&a, NULL);
+      struct timespec sleeper, dummy;
+      long delay = desired_delay - us_elapsed;
+      sleeper.tv_sec = delay / 1000000;
+      sleeper.tv_nsec = (delay % 1000000) * 1000;
+      nanosleep(&sleeper, &dummy);
+      //usleep(desired_delay - us_elapsed); //TODO: take into account generate/send time
+      gettimeofday(&b, NULL);
+      printf("sleep took %ld us\n", (long)((b.tv_sec - a.tv_sec) * 1000000 + b.tv_usec - a.tv_usec));
+    }
+    gettimeofday(&last, NULL);
+
+    // now that we're hopefully in sync, update the display
+    send_to_display(draw_buf, OUT_BUF_SIZE);
   }
 }
