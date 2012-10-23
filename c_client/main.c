@@ -34,10 +34,11 @@ void send_to_display(unsigned char* buffer, int buffer_len) {
   addr.sin_family = AF_INET;
   addr.sin_port = htons(58082); // send on port 58082 - Disorient protocol
 
-  // send udp frame to emulator on localhost
+  // send udp frame to emulator on localhost (or display proxy, if on the RPi)
   inet_aton("127.0.0.1", &addr.sin_addr); // localhost
   sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
 
+#ifdef PLAT_DESKTOP
   // and to laptop
   inet_aton("192.168.1.78", &addr.sin_addr); // localhost
   sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
@@ -49,6 +50,7 @@ void send_to_display(unsigned char* buffer, int buffer_len) {
   // to matrix v2 (raspberry pi)
   inet_aton("192.168.1.105", &addr.sin_addr); // localhost
   sendto(udp_fd, output, expected_len + 1, 0, (const struct sockaddr *)&addr, sizeof(addr));
+#endif
 }
 
 // implemented by the particular animation we're compiling
@@ -319,7 +321,7 @@ int main() {
       nanosleep(&sleeper, &dummy);
       //usleep(desired_delay - us_elapsed); //TODO: take into account generate/send time
       gettimeofday(&b, NULL);
-      printf("sleep took %ld us\n", (long)((b.tv_sec - a.tv_sec) * 1000000 + b.tv_usec - a.tv_usec));
+      //printf("sleep took %ld us\n", (long)((b.tv_sec - a.tv_sec) * 1000000 + b.tv_usec - a.tv_usec));
     }
     gettimeofday(&last, NULL);
 

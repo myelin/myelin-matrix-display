@@ -51,6 +51,7 @@ void setup_animation() {
 
 void draw_frame(int frame) {
   dim(150);
+  set_frame_rate(15);
   for (int i = 0; i < N_BALLS; ++i) {
     //printf("ball %d: height %d v %d delay %d\n", i, balls[i].y, balls[i].v, balls[i].delay);
     balls[i].fall();
