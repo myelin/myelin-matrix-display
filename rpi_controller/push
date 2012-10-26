@@ -1,0 +1,4 @@
+rsync --exclude=*~ -vrzu * pi:rpi_controller/
+ssh pi 'sudo cp rpi_controller/myelin_matrix_display.init.sh /etc/init.d/myelin_matrix_display'
+
+
