@@ -4,3 +4,7 @@ here=`dirname $0`
 for gpio in 7 8 9 10 11 17 18 24 25 23; do
     $here/tristate $gpio
 done
+
+# so, we don't actually want to tristate everything.  /SS on the AVR and CSN on the RF24 should both be held high
+$here/output 7 1
+$here/output 8 1

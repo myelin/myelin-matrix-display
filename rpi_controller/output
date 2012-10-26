@@ -6,5 +6,5 @@ value=$2
 echo "Outputting $value on GPIO$gpio"
 echo $gpio > /sys/class/gpio/export
 echo out > /sys/class/gpio/gpio$gpio/direction
-echo $value > /sys/class/gpio/gpio23/value
+echo $value > /sys/class/gpio/gpio$gpio/value
 echo $gpio > /sys/class/gpio/unexport
