@@ -1,6 +1,8 @@
 Myelin Matrix Display
 =====================
 
+http://mx.myel.in/
+
 Copyright (C) 2012 Phillip Pearson
 
 You may use this code under a CC Attribution license.
@@ -9,9 +11,10 @@ Introduction
 ------------
 
 The [Myelin Matrix Display](http://www.myelin.co.nz/matrix-display/)
-is a 25x12 LED matrix, built for Camp Want It! at Burning Man 2012
-(9:15 and Esplanade).  It consists of 300 WS2801-controlled 5050 LEDs,
-mounted on a roughly 6' x 3' board.
+is a 25x12 LED matrix, that I built as my project for Burning Man
+2012.  I installed it at my camp, Want It! (9:15 and Esplanade).  It
+consists of 300 WS2801-controlled 5050 LEDs, mounted on a roughly 6' x
+3' board.
 
 It supports the UDP protocol used by Disorient's Art Car Wash code,
 allowing a Processing app, or any of the targets in the c_client
