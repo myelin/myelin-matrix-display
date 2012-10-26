@@ -21,7 +21,15 @@ EXTRACPPFLAGS = -DMATRIX_V2
 ISP_PROG = -c myelin
 AVRDUDE_VERBOSE = 1
 #OPTIMIZATION = -O2
-include Arduino.mk
+include ../misc/Arduino.mk
 
 disassemble: $(TARGET_ELF)
-  $(AVR_TOOLS_PATH)/avr-objdump -S $(TARGET_ELF)
+	$(AVR_TOOLS_PATH)/avr-objdump -S $(TARGET_ELF)
+
+push: $(TARGET_HEX)
+	scp $(TARGET_HEX) pi:$(OBJDIR)/
+
+preparepi:
+	ssh pi sudo /etc/init.d/myelin_matrix_display stop
+
+install: push preparepi ispload

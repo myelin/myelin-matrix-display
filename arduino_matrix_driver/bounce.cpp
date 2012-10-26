@@ -46,6 +46,12 @@ class Ball {
 
 static Ball balls[N_BALLS];
 
+void reset_bounce() {
+  for (int i = 0; i < N_BALLS; ++i) {
+    balls[i].reset();
+  }
+}
+
 void setup_animation() {
   for (int i = 0; i < N_BALLS; ++i) {
     balls[i].delay = random(0, 99);

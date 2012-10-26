@@ -117,6 +117,7 @@ void setup() {
 #ifdef MATRIX_V2
   // listen on /SS; if it goes low, tristate everything and shut down until it goes high again
   pinMode(10, INPUT);
+  digitalWrite(10, HIGH); // set pull-up
 #endif
 
 //#define SPI_INTR
@@ -137,12 +138,16 @@ void setup() {
 
   // set LEDs weakly on in R/G/B pattern.
   strip.begin();
-  uint8_t c = random(0, 255);
+  /*  uint8_t c = random(0, 255);
   for (uint8_t y = 0; y < HEIGHT; ++y) {
     for (uint8_t x = 0; x < WIDTH; ++x) {
       strip.setPixelColor(y * WIDTH + x, (x + y + c) % 24, (x + y + c + 8) % 24, (x + y + c + 16) % 24);
     }
-  }
+    }*/
+  point(0, 0, 0xFFFFFFL);
+  point(24, 0, 0xFFFFFFL);
+  point(0, 11, 0xFFFFFFL);
+  point(24, 11, 0xFFFFFFL);
   fast_show();
 
   // set up UART
@@ -169,6 +174,7 @@ void set_frame_rate(uint8_t frame_rate) {
 
 int current_mode = 0;
 extern void draw_test(int frame);
+extern void reset_bounce();
 extern void draw_bounce(int frame);
 extern void draw_lines(int frame);
 extern void draw_insane_lines(int frame);
@@ -204,6 +210,9 @@ void loop() {
     while (!digitalRead(10));
     pinMode(WS2801_ARDUINO_DATA, OUTPUT);
     pinMode(WS2801_ARDUINO_CLOCK, OUTPUT);
+    // slow start
+    blank();
+    reset_bounce(); // my favourite mode...
   }
 #endif
 
