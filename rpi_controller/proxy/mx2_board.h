@@ -1,3 +1,18 @@
+#ifndef __MX2_BOARD_H
+#define __MX2_BOARD_H
+
+#include <assert.h>
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <wiringPi.h>
+#include <wiringPiSPI.h>
+
+typedef unsigned char uint8_t;
+typedef unsigned long long uint64_t;
+
 // gpio configuration for matrix display MX2 board
 
 // Note: RPi pinout changed between revisions, so avoid GPIO0/1/4/21
@@ -27,7 +42,7 @@
 #define PIN_RF24_CE 24
 #define PIN_RF24_IRQ 25
 // - CE1 is connected to the pin marked D7, and jumpered to /CS on the RF24
-#define PIN_RF24_CE1 7
+#define PIN_RF24_CSN 7
 #define PIN_RF24_MISO 9
 // - MOSI and SCLK on the RF24 are connected to GPIOs on the RPi, because the SPI port is needed to drive the LEDs
 #define PIN_RF24_MOSI 18
@@ -38,3 +53,5 @@
 // - SPI pins are connected to the LEDs, not the AVR/RF24
 #define PIN_LED_CLK 11
 #define PIN_LED_DATA 10
+
+#endif // __MX2_BOARD_H

@@ -3,17 +3,17 @@
 default: build
 
 build:
-	g++ -Wall -o rf24 rf24.c udp.c -lwiringPi
+	g++ -Wall -o matrix_proxy main.c rf24.c udp.c -lwiringPi
 
 test: push
-	ssh pi 'sudo killall rf24; sudo rpi_controller/release_all_ports; cd pi_rf24 && make -C WiringPi/wiringPi && sudo make -C WiringPi/wiringPi install && make && sudo ./rf24'
-#gdb -ex run ./rf24
+	ssh pi 'sudo killall matrix_proxy; sudo rpi_controller/release_all_ports; cd matrix_proxy && make -C WiringPi/wiringPi && sudo make -C WiringPi/wiringPi install && make && sudo ./matrix_proxy'
+#gdb -ex run ./matrix_proxy
 
 freerun: push
-	ssh pi 'sudo killall rf24; cd pi_rf24 && make && sudo ./rf24 </dev/null >/dev/null 2>/dev/null &'
+	ssh pi 'sudo killall matrix_proxy; cd matrix_proxy && make && sudo ./matrix_proxy </dev/null >/dev/null 2>/dev/null &'
 
 push:
-	rsync -vrzu --exclude=.git --exclude=*~ Makefile *.c *.h WiringPi pi:pi_rf24/
+	rsync -vrzu --exclude=.git --exclude=*~ Makefile *.c *.h WiringPi pi:matrix_proxy/
 
 reset:
 	ssh pi 'sudo rpi_controller/release_all_ports'
