@@ -1,8 +1,25 @@
 // gpio configuration for matrix display MX2 board
 
+// Note: RPi pinout changed between revisions, so avoid GPIO0/1/4/21
+
+// RPi GPIO, excluding troublesome ones:
+// 7/CE1 - RF24 /CS
+// 8/CE0 - AVR /SS
+// 9/MISO
+// 10/SCLK - LED clock
+// 11/MOSI - LED data
+// 14/TXD
+// 15/RXD
+// 17 - RF24 SCK
+// 18 - RF24 MOSI
+// 22
+// 23 - AVR /RESET
+// 24 - RF24 CE
+// 25 - RF24 IRQ
+
 // ATMEGA328P
 // - CE0 is connected to the pin marked /CS, which was intended for the RF24, but is now for RPi-AVR comms
-#define PIN_AVR_CE0 8
+#define PIN_AVR_SS 8
 #define PIN_AVR_RESET 23
 
 // nRF24L01+

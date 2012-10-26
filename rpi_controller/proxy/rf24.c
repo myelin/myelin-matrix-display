@@ -55,10 +55,12 @@ typedef unsigned char uint8_t;
 typedef unsigned long long uint64_t;
 
 void enable_spi_pins() {
-  printf("enable SPI pins\n");
-  for (int pin = 7; pin <= 11; ++pin) {
-    pinMode(pin, SPI_ALT);
-  }
+  printf("enable MOSI and SCLK (not others, because we use them for other things)\n");
+  //pinMode(7, SPI_ALT); // CE0
+  //pinMode(8, SPI_ALT); // CE1
+  //pinMode(9, SPI_ALT); // MISO
+  pinMode(10, SPI_ALT); // MOSI
+  pinMode(11, SPI_ALT); // SCLK
 }
 
 class nRF24L01 {
@@ -238,6 +240,14 @@ static void reset_avr() {
 void shut_down_avr() {
   printf("Shutting down AVR\n");
   reset_avr();
+
+  // start it back up, then play with SS
+  pinMode(PIN_AVR_SS, OUTPUT);
+  digitalWrite(PIN_AVR_RESET, 1);
+
+  digitalWrite(PIN_AVR_SS, 1);
+  digitalWrite(PIN_AVR_SS, 0);
+  delay(100); // let it get through init
 }
 
 void restart_avr() {
@@ -246,7 +256,7 @@ void restart_avr() {
   delayMicroseconds(100);
 
   // disable SPI pins
-  pinMode(PIN_AVR_CE0, INPUT);
+  pinMode(PIN_AVR_SS, INPUT);
   pinMode(PIN_RF24_CE1, INPUT);
   pinMode(PIN_RF24_MISO, INPUT);
   pinMode(PIN_RF24_MOSI, INPUT);
@@ -273,7 +283,6 @@ class WS2801 {
   }
 
   void setup() {
-    shut_down_avr();
     enable_spi_pins();
     if (wiringPiSPISetup(_channel, 1000000) < 0) {
       fprintf(stderr, "SPI Setup failed: %s\n", strerror (errno));
@@ -335,18 +344,6 @@ class WS2801 {
   */
 };
 
-class AVR {
- public:
-
-  AVR() {
-  }
-
-  void setup() {
-    restart_avr();
-    enable_spi_pins();
-  }
-};
-
 nRF24L01 rf24(RF24_SPI_CHANNEL, // SPI channel 1 (CSN = P1-26 / CE1)
 	      PIN_RF24_CE, // CE on P1-18 (GPIO 24)
 	      PIN_RF24_IRQ); // IRQ on P1-22 (GPIO 25)
@@ -355,8 +352,6 @@ uint8_t tx_addr[5] = {0xE1, 0xF0, 0xF0, 0xF0, 0xF0};
 uint8_t rx_addr[5] = {0xD2, 0xF0, 0xF0, 0xF0, 0xF0};
 
 WS2801 leds(LED_SPI_CHANNEL);
-
-AVR avr;
 
 extern void setup_udp();
 extern void close_udp();
@@ -369,7 +364,7 @@ int main() {
     return -1;
   }
 
-  //avr.setup();
+  shut_down_avr();
   leds.setup();
 
   setup_udp();
@@ -386,7 +381,6 @@ int main() {
   }
   close_udp();
 
-  shut_down_avr();
   // radio
   if (avr_active) {
     printf("can't init rf24 with avr active\n");
