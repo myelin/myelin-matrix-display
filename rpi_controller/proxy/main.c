@@ -10,8 +10,8 @@ void enable_spi_pins() {
   pinMode(11, SPI_ALT); // SCLK
 }
 
-// flag so that we don't accidentally kill the rpi by shorting its gpios
-static int avr_active = 1;
+// flags so that we don't accidentally kill the rpi by shorting its gpios
+static int avr_active = 1, avr_frozen = 0;
 
 static void reset_avr() {
   pinMode(PIN_AVR_RESET, OUTPUT);
@@ -21,7 +21,19 @@ static void reset_avr() {
   avr_active = 0;
 }
 
-// put the avr into reset, which will tristate all its outputs (except possibly MISO, if we push $AC on MOSI, because it'll get confused and think it's in programming mode)
+void wake_up_avr() {
+  if (!avr_frozen) return;
+  digitalWrite(PIN_AVR_SS, 1);
+  avr_frozen = 0;
+}
+
+void freeze_avr() {
+  if (avr_frozen) return;
+  digitalWrite(PIN_AVR_SS, 0);
+  avr_frozen = 1;
+}
+
+// reset the avr, then freeze it once it wakes up
 void shut_down_avr() {
   printf("Shutting down AVR\n");
   reset_avr();
@@ -29,7 +41,7 @@ void shut_down_avr() {
   // start it back up, then play with SS
   pinMode(PIN_AVR_SS, OUTPUT);
   digitalWrite(PIN_AVR_RESET, 1);
-  digitalWrite(PIN_AVR_SS, 0);
+  freeze_avr();
   delay(100); // let it get through init
 
   // set up all the other pins
@@ -148,31 +160,36 @@ int main() {
   leds.setup();
 
   // radio
-  if (avr_active) {
-    printf("can't init rf24 with avr active\n");
-  } else {
-    rf24.setup();
-    rf24.set_tx_addr(local_address, 5); // set TX_ADDR and RX_ADDR_P0 (...D2 addr)
-    rf24.set_rx_addr(1, remote_address, 5); // set RX_ADDR_P1 (...E1 addr)
-    //    rf24.set_retries(15); // retry 15 times
-    //    rf24.set_retry_delay(1); // 500 us
-    rf24.listen();
-  }
+  rf24.setup();
+  rf24.set_tx_addr(local_address, 5); // set TX_ADDR and RX_ADDR_P0 (...D2 addr)
+  rf24.set_rx_addr(1, remote_address, 5); // set RX_ADDR_P1 (...E1 addr)
+  //    rf24.set_retries(15); // retry 15 times
+  //    rf24.set_retry_delay(1); // 500 us
+  rf24.listen();
 
+  int last_frame_received = millis();
   setup_udp();
   unsigned char buf[900];
   printf("Waiting for UDP frames\n"); fflush(stdout);
-  //int start_time = millis();
-  while (1) { //millis() - start_time < 10000) {
+
+  while (1) {
     unsigned char radio_buf[32];
     if (rf24.receive(radio_buf, 32)) {
       printf("received something from the radio: %d\n", (int)radio_buf[0]);
     }
+
     if (check_udp(buf, 900)) {
+      freeze_avr();
       leds.send(buf, 900);
       fflush(stdout);
+      last_frame_received = millis();
     } else {
       delay(1);
+    }
+
+    if (avr_frozen && millis() - last_frame_received > 1000) {
+      printf("waking up avr because the network seems to have gone dead\n");
+      wake_up_avr();
     }
   }
   close_udp();
