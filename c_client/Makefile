@@ -7,7 +7,8 @@ endif
 CFLAGS = -Wall -O2 $(PLAT)
 
 CFILES = main.c
-PROJECTS = fade white epilepsy bounce chill strobe chase sweep test rainbow life black twinkle
+PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle
+DISABLED = fade chill test life sweep sweep
 SPECIALS = ripples
 DEPS = matrix.h
 
@@ -25,3 +26,4 @@ $(PROJECTS): %: %.c $(CFILES) $(DEPS)
 push:
 	make clean
 	rsync -vrz . pi:c_client/
+	ssh pi 'cd c_client && make'
