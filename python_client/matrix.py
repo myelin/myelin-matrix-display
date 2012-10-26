@@ -131,25 +131,24 @@ class Frame:
         self.line(x0, y0, x0, y1, c)
         self.line(x1, y0, x1, y1, c)
 
+class Flipper:
+    def __init__(self, frame_rate):
+        self.last = 0
+        self.frame_rate = frame_rate
+    def flip(self, f):
+        now = time.time()
+        print "since last:",now - self.last
+        if (now - self.last) < (1.0 / self.frame_rate):
+            to_sleep = 1.0 / self.frame_rate - (now - self.last)
+            time.sleep(to_sleep)
+        if hasattr(f, 'show'):
+            f.show()
+        else:
+            show(f)
+        self.last = time.time()
+
 if __name__ == '__main__':
-    frame_rate = 50
-    class Flipper:
-        def __init__(self):
-            self.last = 0
-        def flip(self, f):
-            now = time.time()
-            print "since last:",now - self.last
-            time.sleep(1.0/frame_rate)
-#            if (now - self.last) < (1.0 / frame_rate):
-#                to_sleep = 1.0 / frame_rate - (now - self.last)
-#                print to_sleep
-#                time.sleep(to_sleep)
-            if hasattr(f, 'show'):
-                f.show()
-            else:
-                show(f)
-            self.last = now
-    flipper = Flipper()
+    flipper = Flipper(50)
     f = Frame()
     def flip():
         flipper.flip(f)
