@@ -114,6 +114,11 @@ void setup() {
   Udp.begin(localPort);
 #endif
 
+#ifdef MATRIX_V2
+  // listen on /SS; if it goes low, tristate everything and shut down until it goes high again
+  pinMode(10, INPUT);
+#endif
+
 //#define SPI_INTR
 #ifdef MX_USE_SPI_INPUT
   // Set SPI to slave at 2 MHz (as max speed is F_CPU/4 when in slave mode), with mode 0 (positive clock, sample on rising clock edge)
@@ -190,6 +195,18 @@ ISR (SPI_STC_vect) {
 #endif
 
 void loop() {
+#ifdef MATRIX_V2
+  // listen on /SS; if it goes low, tristate everything and shut down until it goes high again
+  if (!digitalRead(10)) {
+    // tristate led data and clock
+    pinMode(WS2801_ARDUINO_DATA, INPUT);
+    pinMode(WS2801_ARDUINO_CLOCK, INPUT);
+    while (!digitalRead(10));
+    pinMode(WS2801_ARDUINO_DATA, OUTPUT);
+    pinMode(WS2801_ARDUINO_CLOCK, OUTPUT);
+  }
+#endif
+
   unsigned long now = millis();
 
 #ifdef MX_USE_SPI_INPUT
