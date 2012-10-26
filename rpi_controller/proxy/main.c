@@ -1,3 +1,4 @@
+#include <sys/stat.h>
 #include "mx2_board.h"
 #include "rf24.h"
 
@@ -150,6 +151,8 @@ extern void close_udp();
 extern int check_udp(unsigned char* frame_buf, size_t frame_buf_len);
 
 int main() {
+  mkdir("/var/run/matrix_proxy", 0755);
+
   printf("init wiringPi\n");
   if (wiringPiSetupGpio() < 0) {
     printf("failed to init wiringPi\n");
@@ -176,6 +179,11 @@ int main() {
     unsigned char radio_buf[32];
     if (rf24.receive(radio_buf, 32)) {
       printf("received something from the radio: %d\n", (int)radio_buf[0]);
+      FILE* fptr = fopen("/var/run/matrix_proxy/cmd", "wb");
+      if (fptr) {
+	fputc(radio_buf[0], fptr);
+	fclose(fptr);
+      }
     }
 
     if (check_udp(buf, 900)) {
