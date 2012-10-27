@@ -32,6 +32,42 @@ def blank():
 def random_color():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
+# * wheel(0-767) generates an approximate rainbow.  Based on Wheel()
+# * from the Adafruit_WS2801 library, which requires the following
+# * text in all distributions:
+#
+#  Example sketch for driving Adafruit WS2801 pixels!
+#
+#  Designed specifically to work with the Adafruit RGB Pixels!
+#  12mm Bullet shape ----> https://www.adafruit.com/products/322
+#  12mm Flat shape   ----> https://www.adafruit.com/products/738
+#  36mm Square shape ----> https://www.adafruit.com/products/683
+#
+#  These pixels use SPI to transmit the color data, and have built in
+#  high speed PWM drivers for 24 bit color per pixel
+#  2 pins are required to interface
+#
+#  Adafruit invests time and resources providing this open source code,
+#  please support Adafruit and open-source hardware by purchasing
+#  products from Adafruit!
+#
+#  Written by Limor Fried/Ladyada for Adafruit Industries.
+#  BSD license, all text above must be included in any redistribution
+
+WHEEL_MAX = 768
+def wheel(pos):
+    if (pos < 256):
+        return (255 - pos, pos, 0)
+    elif (pos < 512):
+        pos -= 256;
+        return (0, 255 - pos, pos);
+    else:
+        pos -= 512;
+        return (pos, 0, 255 - pos);
+
+def wheel_mask(pos):
+    return fmultiply(wheel(pos), 1.0 / 256)
+
 def multiply(c, factor):
     #print "multiply",c,factor
     return (int(c[0] * factor), int(c[1] * factor), int(c[2] * factor))
@@ -39,6 +75,8 @@ def multiply(c, factor):
 def fmultiply(c, factor):
     #print "multiply",c,factor
     return (float(c[0]) * factor, float(c[1]) * factor, float(c[2]) * factor)
+
+NULL_MASK = (1.0, 1.0, 1.0)
 
 def random_mask():
     return fmultiply(random_color(), 1.0 / 256)

@@ -45,17 +45,34 @@ def main():
             draw_offset_mult(offset, 0, 1.0, matrix.random_mask())
             flip()
 
-    random_jitter(flipper.frame_rate * 2)
-    random_fade(flipper.frame_rate * 5)
+    def fadein(period):
+        fade(0, 0, 0.0, 1.0, period)
 
-    fade(0, 0, 0.0, 1.0, flipper.frame_rate)
-    mask = (1.0, 1.0, 1.0)
-    for offset in range(max_offset):
-        for _blend in range(10):
-            blend = float(_blend) / 10
-            draw_offset_mult(offset, blend, 1.0, mask)
+    def fadeout(period):
+        fade(max_offset, 0, 1.0, 0.0, period)
+
+    def scroll_logo(frames):
+        for frame in range(frames):
+            pos = float(frame) / frames * max_offset
+            offset = int(pos)
+            blend = pos - offset
+            #for offset in range(max_offset):
+            #for _blend in range(10):
+            #blend = float(_blend) / 10
+            draw_offset_mult(offset, blend, 1.0, matrix.wheel_mask(flipper.frame % matrix.WHEEL_MAX))
             flip()
-    fade(max_offset, 0, 1.0, 0.0, flipper.frame_rate)
+
+    def scroll_fade():
+        for offset in range(0, max_offset, 5):
+            fade(offset, 0, 1.0, 0.0, flipper.frame_rate / 2)
+
+    while 1:
+        scroll_fade()
+        random_jitter(flipper.frame_rate * 2)
+        scroll_logo(max_offset / 2)
+        random_fade(flipper.frame_rate * 4)
+        random_jitter(flipper.frame_rate * 2)
+
 
 if __name__ == '__main__':
     main()
