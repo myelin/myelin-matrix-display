@@ -15,7 +15,7 @@ def encode(data):
 
 def show(data):
     output = '\x01' + encode(data)
-    sock.sendto(output, ("192.168.1.99", 58082))
+    sock.sendto(output, ("127.0.0.1", 58082))
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -33,7 +33,22 @@ def random_color():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 def multiply(c, factor):
+    #print "multiply",c,factor
     return (int(c[0] * factor), int(c[1] * factor), int(c[2] * factor))
+
+def fmultiply(c, factor):
+    #print "multiply",c,factor
+    return (float(c[0]) * factor, float(c[1]) * factor, float(c[2]) * factor)
+
+def random_mask():
+    return fmultiply(random_color(), 1.0 / 256)
+
+# multiply a colour by a (0-1.0, 0-1.0, 0-1.0) RGB tuple
+def cmultiply(c, mask):
+    return (c[0] * mask[0], c[1] * mask[1], c[2] * mask[2])
+
+def add(c1, c2):
+    return (c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2])
 
 def load(fn):
     pixels = open(fn, 'rb').read()
@@ -135,6 +150,7 @@ class Flipper:
     def __init__(self, frame_rate):
         self.last = 0
         self.frame_rate = frame_rate
+        self.frame = 0
     def flip(self, f):
         now = time.time()
         print "since last:",now - self.last
@@ -145,6 +161,7 @@ class Flipper:
             f.show()
         else:
             show(f)
+        self.frame += 1
         self.last = time.time()
 
 if __name__ == '__main__':
