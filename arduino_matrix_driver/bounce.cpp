@@ -52,7 +52,7 @@ void reset_bounce() {
   }
 }
 
-void setup_animation() {
+void setup_bounce() {
   for (int i = 0; i < N_BALLS; ++i) {
     balls[i].delay = random(0, 99);
   }

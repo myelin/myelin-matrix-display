@@ -108,6 +108,17 @@ void serial_print(const char* s) {
   }
 }
 
+extern void draw_test(int frame);
+extern void setup_bounce();
+extern void reset_bounce();
+extern void draw_bounce(int frame);
+extern void draw_lines(int frame);
+extern void draw_insane_lines(int frame);
+extern void draw_epilepsy(int frame);
+extern void draw_rainbow(int frame);
+extern void setup_streamers();
+extern void draw_streamers(int frame);
+
 void setup() {
 #ifdef MX_USE_ETHERNET
   Ethernet.begin(mac,ip);
@@ -162,6 +173,10 @@ void setup() {
 
   // ready!
   serial_print("OK.\n");
+
+  // set up modes
+  setup_bounce();
+  setup_streamers();
 }
 
 long last_serial_frame = 0, last_ethernet_frame = 0, last_frame = 0;
@@ -173,13 +188,6 @@ void set_frame_rate(uint8_t frame_rate) {
 }
 
 int current_mode = 0;
-extern void draw_test(int frame);
-extern void reset_bounce();
-extern void draw_bounce(int frame);
-extern void draw_lines(int frame);
-extern void draw_insane_lines(int frame);
-extern void draw_epilepsy(int frame);
-extern void draw_rainbow(int frame);
 
 // /SS pin is active -- transmission is over or cancelled if !spi_selected()
 #define spi_selected() (!(PINB & (1<<PORTB2)))
@@ -352,29 +360,39 @@ void loop() {
 
 #define FRAMES_PER_MODE 300
 
-//#define CHILL
-#define INSANE
-#define WANT_IT_2012
-#define JUST_BOUNCE
+#define INCLUDE_TEST
+#define INCLUDE_LINES
+#define INCLUDE_EPILEPSY
+#define INCLUDE_INSANE_LINES
+#define INCLUDE_BOUNCE
+#define INCLUDE_RAINBOW
+#define INCLUDE_STREAMERS
 
   if ((now - last_serial_frame) > 500 && (now - last_ethernet_frame) > 500 && (now - last_frame) > ms_per_frame) {
     uint8_t handled;
     do {
       handled = 1;
       switch (current_mode) {
-#if defined(WANT_IT_2012)
+#ifdef INCLUDE_TEST
         case 0: draw_test(current_frame); break;
+#endif
+#ifdef INCLUDE_LINES
         case 1: draw_lines(current_frame); break;
 #endif
-#if defined(INSANE)
+#ifdef INCLUDE_EPILEPSY
         case 2: draw_epilepsy(current_frame); break;
+#endif
+#ifdef INCLUDE_INSANE_LINES
         case 3: draw_insane_lines(current_frame); break;
 #endif
-#if defined(WANT_IT_2012) || defined(JUST_BOUNCE)
+#ifdef INCLUDE_BOUNCE
         case 4: draw_bounce(current_frame); break;
 #endif
-#if defined(CHILL)
+#ifdef INCLUDE_RAINBOW
         case 5: draw_rainbow(current_frame); break;
+#endif
+#ifdef INCLUDE_STREAMERS
+        case 6: draw_streamers(current_frame); break;
 #endif
         default:
           handled = 0;

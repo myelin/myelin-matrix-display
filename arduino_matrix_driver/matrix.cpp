@@ -38,6 +38,12 @@ void point(int x, int y, color_t c) {
   point(x, y, (unsigned char)(c >> 16), (unsigned char)(c >> 8), (unsigned char)c);
 }
 
+void point_clip(int x, int y, color_t c) {
+  if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+    point(x, y, c);
+  }
+}
+
 uint32_t random_color() {
   return random(0, 0xFFFFFF);
 }
