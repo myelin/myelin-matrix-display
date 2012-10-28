@@ -48,6 +48,7 @@ extern void blank();
 extern void dim(int factor);
 extern void point(int x, int y, unsigned char r, unsigned char g, unsigned char b);
 extern void point(int x, int y, color_t c);
+extern void point_clip(int x, int y, color_t c);
 extern void line(int x0, int y0, int x1, int y1, color_t c);
 extern void rect(int x0, int y0, int x1, int y1, unsigned char r, unsigned char g, unsigned char b);
 extern void rect(int x0, int y0, int x1, int y1, color_t c);
