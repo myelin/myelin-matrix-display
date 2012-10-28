@@ -17,7 +17,7 @@
 extern uint8_t* pixel_data;
 
 static void show() {
-  ws2801_show(pixel_data);
+  led_show(pixel_data);
 }
 
 #define delay _delay_ms

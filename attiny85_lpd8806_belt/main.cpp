@@ -14,7 +14,7 @@ uint8_t pixel_data[WS2801_BUFFER_LEN];
 void setup() {
   ws2801_setup();
   memset(pixel_data, 128, WS2801_BUFFER_LEN);
-  ws2801_show(pixel_data);
+  lpd8806_show(pixel_data);
 }
 
 extern void run_effects();
