@@ -53,8 +53,8 @@ EthernetUDP Udp;
 #define WS2801_PORT PORTD
 #define WS2801_DATA PORTD2
 #define WS2801_CLOCK PORTD4
-#define WS2801_ARDUINO_DATA 4
-#define WS2801_ARDUINO_CLOCK 6
+#define WS2801_ARDUINO_DATA 2
+#define WS2801_ARDUINO_CLOCK 4
 #endif
 
 // LED control
@@ -353,8 +353,8 @@ void loop() {
 #define FRAMES_PER_MODE 300
 
 //#define CHILL
-//#define INSANE
-//#define WANT_IT_2012
+#define INSANE
+#define WANT_IT_2012
 #define JUST_BOUNCE
 
   if ((now - last_serial_frame) > 500 && (now - last_ethernet_frame) > 500 && (now - last_frame) > ms_per_frame) {
@@ -368,7 +368,7 @@ void loop() {
 #endif
 #if defined(INSANE)
         case 2: draw_epilepsy(current_frame); break;
-//        case 3: draw_insane_lines(current_frame); break;
+        case 3: draw_insane_lines(current_frame); break;
 #endif
 #if defined(WANT_IT_2012) || defined(JUST_BOUNCE)
         case 4: draw_bounce(current_frame); break;
