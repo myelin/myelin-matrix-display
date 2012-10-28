@@ -7,7 +7,7 @@ endif
 CFLAGS = -Wall -O2 $(PLAT)
 
 CFILES = main.c
-PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers
+PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers lunacy
 DISABLED = fade chill test life sweep sweep
 SPECIALS = ripples
 DEPS = matrix.h

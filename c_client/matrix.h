@@ -15,6 +15,10 @@ using namespace std;
 #endif
 extern int oversampling; // defaults to 1
 
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 #define OUT_W 25
 #define OUT_H 12
 #define OUT_BUF_SIZE (OUT_W * OUT_H * (RGB ? 3 : 1))
@@ -54,12 +58,23 @@ extern void rect(int x0, int y0, int x1, int y1, unsigned char r, unsigned char 
 extern void rect(int x0, int y0, int x1, int y1, color_t c);
 extern color_t random_color();
 extern color_t color_fade(color_t color1, color_t color2, int pos);
+inline color_t color_add(color_t c, double c2) {
+  return color(red_from_color(c) + red_from_color(c2),
+	       green_from_color(c) + green_from_color(c2),
+	       blue_from_color(c) + blue_from_color(c2));
+}
 inline color_t color_mult(color_t c, double factor) {
   return color((uint8_t)((double)red_from_color(c) * factor),
 	       (uint8_t)((double)green_from_color(c) * factor),
 	       (uint8_t)((double)blue_from_color(c) * factor));
 }
+inline color_t color_mask(color_t c, color_t mask) {
+  return color(red_from_color(c) * red_from_color(mask) / 256,
+	       green_from_color(c) * green_from_color(mask) / 256,
+	       blue_from_color(c) * blue_from_color(mask) / 256);
+}
 extern void set_frame_rate(int rate);
+#define WHEEL_MAX 768
 extern color_t wheel(uint16_t pos);
 extern void circle(int cx, int cy, int r, color_t c);
 
