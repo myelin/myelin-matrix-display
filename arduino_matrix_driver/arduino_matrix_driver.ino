@@ -118,6 +118,7 @@ extern void draw_epilepsy(int frame);
 extern void draw_rainbow(int frame);
 extern void setup_streamers();
 extern void draw_streamers(int frame);
+extern void draw_lunacy(int frame);
 
 void setup() {
 #ifdef MX_USE_ETHERNET
@@ -181,13 +182,19 @@ void setup() {
 
 long last_serial_frame = 0, last_ethernet_frame = 0, last_frame = 0;
 int current_frame = 0;
-uint8_t ms_per_frame = 30;
+uint8_t ms_per_frame = 30, frame_rate = 33;
 
-void set_frame_rate(uint8_t frame_rate) {
-  ms_per_frame = 1000 / frame_rate;
+void set_frame_rate(uint8_t _frame_rate) {
+  frame_rate = _frame_rate;
+  ms_per_frame = 1000 / _frame_rate;
 }
 
-int current_mode = 0;
+int current_mode = 7;
+
+void next_mode() {
+  ++current_mode;
+  current_frame = 0;
+}
 
 // /SS pin is active -- transmission is over or cancelled if !spi_selected()
 #define spi_selected() (!(PINB & (1<<PORTB2)))
@@ -360,13 +367,14 @@ void loop() {
 
 #define FRAMES_PER_MODE 300
 
-#define INCLUDE_TEST
+//#define INCLUDE_TEST
 #define INCLUDE_LINES
-#define INCLUDE_EPILEPSY
-#define INCLUDE_INSANE_LINES
+//#define INCLUDE_EPILEPSY
+//#define INCLUDE_INSANE_LINES
 #define INCLUDE_BOUNCE
 #define INCLUDE_RAINBOW
 #define INCLUDE_STREAMERS
+#define INCLUDE_LUNACY
 
   if ((now - last_serial_frame) > 500 && (now - last_ethernet_frame) > 500 && (now - last_frame) > ms_per_frame) {
     uint8_t handled;
@@ -394,6 +402,9 @@ void loop() {
 #ifdef INCLUDE_STREAMERS
         case 6: draw_streamers(current_frame); break;
 #endif
+#ifdef INCLUDE_LUNACY
+        case 7: draw_lunacy(current_frame); break;
+#endif
         default:
           handled = 0;
           if (++current_mode > 10) current_mode = 0;
@@ -402,8 +413,7 @@ void loop() {
     } while (!handled);
     fast_show();
     if (++current_frame >= FRAMES_PER_MODE) {
-      ++current_mode;
-      current_frame = 0;
+      next_mode();
     }
     last_frame = now;
   }
