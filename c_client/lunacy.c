@@ -1,6 +1,6 @@
 #include "matrix.h"
 
-#include "lunacy_logo_mask.inc"
+#include "lunacy_logo_mask.h"
 
 static color_t lunacy_pix(int x, int y) {
   if (x < 0 || y < 0 || x >= lunacy_logo_mask_width || y >= lunacy_logo_mask_height) return BLACK;
