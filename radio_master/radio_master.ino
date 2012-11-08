@@ -1,81 +1,115 @@
 #include <SPI.h>
 #include "nRF24L01.h"
 #include "RF24.h"
-#include "printf.h"
-#include "deadbeef_rand.h"
+#ifndef SLOW_REMOTE
+#include <SoftwareSerial.h>
+#endif
+#include "Keypad.h"
+#include <avr/power.h>
 
-//#define DEBUG_TRANSMISSION
+/*
+ * Driver for remote control for matrix display
+ * (c) 2012 Phillip Pearson
+ */
 
-// nRF24L01+ radio; uses RF24 lib and hardware SPI pins plus CE on D8 and CSN on D10
-RF24 radio(8,10);
+#ifndef SLOW_REMOTE
+// Serial port to talk to computer on 11 (MOSI used as RX) and 12 (MISO for TX)
+SoftwareSerial spiSerial(11, 12);
+#endif
 
-// controller takes this address
+// nRF24L01+ radio; uses RF24 lib and hardware SPI pins plus CE on PB0/8, IRQ on PB1, CSN on PB2/10
+RF24 radio(8, 10);
+
+// controller (us) takes this address
 #define MASTER_ADDRESS 0xF0F0F0F0E1LL
 
-//TODO store as 6 byte arrays rather than 8-byte uint64_ts
 uint64_t remote_addresses[] = {
   //0x651E3111A3LL, // phil board ONE
   //0x659A5234D1LL, // phil board TWO
   0xD3DFAAF79BLL, // lamp board 3 (green terminal block power connector)
-  0x3663D8A1B5LL // lamp board 4 (green terminal block power connector)
-  //0xF8D45E390FLL, // lamp board 5 (home made power connector)
+  0x3663D8A1B5LL, // lamp board 4 (green terminal block power connector)
+  0xF8D45E390FLL // lamp board 5 (home made power connector)
 };
 #define N_REMOTES (sizeof(remote_addresses) / sizeof(uint64_t))
 
-#define N_PIXELS 50
-#define PIXEL_SIZE 3
+// Adafruit keypad (http://adafru.it/419)
+const byte ROWS = 4; //four rows
+const byte COLS = 3; //three columns
+char keys[ROWS][COLS] = {
+  {0, 4, 8},
+  {1, 5, 9},
+  {2, 6, 10},
+  {3, 7, 11}
+};
+// row pins go to m328p pins 28/pc5/A5, 27/pc4/A4, 26/pc3/A3, 2/pd0/0, col pins go to 3/pd1/1, 4/pd2/2, 5/pd3/3
+byte rowPins[ROWS] = {A5, A4, A3, 0}; //connect to the row pinouts of the keypad
+byte colPins[COLS] = {1, 2, 3}; //connect to the column pinouts of the keypad
 
-// random numbers are hard
-static uint32_t deadbeef_seed;
-static uint32_t deadbeef_beef = 0xdeadbeef;
+Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
-uint32_t deadbeef_rand() {
-	deadbeef_seed = (deadbeef_seed << 7) ^ ((deadbeef_seed >> 25) + deadbeef_beef);
-	deadbeef_beef = (deadbeef_beef << 7) ^ ((deadbeef_beef >> 25) + 0xdeadbeef);
-	return deadbeef_seed;
+// Duemilanove has an LED on pin 13
+#define LED 13
+
+#ifndef SLOW_REMOTE
+int serial_putc(char c, FILE *) {
+  uint8_t saved_spcr = SPCR;
+  SPCR &= ~(1<<SPE);
+  spiSerial.write(c);
+  SPCR = saved_spcr;
+  return c;
 }
 
-void deadbeef_srand(uint32_t x) {
-	deadbeef_seed = x;
-	deadbeef_beef = 0xdeadbeef;
+void printf_begin(void) {
+  fdevopen(&serial_putc, 0);
 }
+#endif
 
 static void select_slave(uint8_t idx) {
 //  printf("select slave %d\r\n", (int)idx);
   radio.openWritingPipe(remote_addresses[idx]);
 }
 
-void setup(void)
-{
-  Serial.begin(115200);
+void setup() {
+#ifdef SLOW_REMOTE
+  clock_prescale_set(clock_div_8); // if changing this, you also need to change F_CPU in the makefile
+#endif
+
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, 1);
+#ifndef SLOW_REMOTE
+  spiSerial.begin(38400);
   printf_begin();
+#endif
 
   radio.begin();
-  radio.setRetries(15, 0); // no retries - they don't seem to work for me
+  radio.setRetries(15, 0);
 
   // we're sending to one of the slaves, and listening on the master address
   select_slave(0);
   radio.openReadingPipe(1, MASTER_ADDRESS);
+  radio.stopListening(); // save power
 
-  // We're not even going to listen to the slave nodes
-  radio.stopListening();
-
+#ifndef SLOW_REMOTE
   radio.printDetails();
+#endif
+  radio.powerDown();
 }
 
-long last = 0, last_frame = 0;
-
+#define DEBUG_TRANSMISSION
+long last = 0;
 static bool send_command_buffer(uint8_t* buffer) {
-  bool ok;
+  radio.powerUp();
+  bool ok, r = false;
   uint8_t giveup = 0;
   do {
     long start = millis();
-    ok = radio.write( buffer, 32 );
+    ok = radio.write(buffer, 2);
     long now = millis();
     if (ok) {
 #ifdef DEBUG_TRANSMISSION
       printf("ok %d %d ", (int)(now - start), (int)(now - last));
 #endif
+      r = true;
     } else {
 #ifdef DEBUG_TRANSMISSION
       printf("FAIL %d ", (int)(now - last));
@@ -83,12 +117,12 @@ static bool send_command_buffer(uint8_t* buffer) {
       if (++giveup > 10) {
         // too many failures
         ok = 1;
-        return false;
       }
     }
     last = now;
   } while (!ok);
-  return true;
+  radio.powerDown();
+  return r;
 }
 
 static bool transmit_single_command(uint8_t slave, uint8_t* command) {
@@ -96,77 +130,46 @@ static bool transmit_single_command(uint8_t slave, uint8_t* command) {
   return send_command_buffer(command);
 }
 
-static void transmit_buffer(uint8_t slave, uint8_t* display) {
-  // set TX_ADDR to point to the correct slave
-  select_slave(slave);
-  printf("    %d ", (int)slave);
+#ifdef FLASH_LED
+uint8_t led = 0;
+#endif
 
-  // send the pixel values in 5 packets
-  uint8_t outbuf[32];
-  for (int bank = 0; bank < 5; ++bank) {
-    outbuf[0] = (bank == 4) ? 1 : 0; // change and update
-    outbuf[1] = bank;
-    for (uint8_t p = 0; p < 10 * PIXEL_SIZE; ++p) outbuf[2 + p] = display[bank * 10 * PIXEL_SIZE + p];
-    //memcpy(outbuf + 2, display + bank * 10 * PIXEL_SIZE, 10 * PIXEL_SIZE);
-    // send until we get an ack
-    if (!send_command_buffer(outbuf)) break;
+void loop() {
+  // save SPI settings
+  uint8_t old_spcr = SPCR;
+  SPCR &= ~(1<<SPE);
+
+  // flash
+  pinMode(LED, OUTPUT);
+#ifdef FLASH_LED
+  led = ~led;
+  digitalWrite(LED, led);
+#else
+  digitalWrite(LED, 0); // save power
+#endif
+
+  // check keypad and output over MISO if anything happened
+  char key = keypad.getKey();
+  if (key) {
+    pinMode(12, OUTPUT); // set MISO as serial output
+#ifndef SLOW_REMOTE
+    spiSerial.print("key: ");
+    spiSerial.println(key);
+#endif
   }
-  printf("\r\n");
-}
 
-uint8_t modes_to_access[] = {
-  2, // chase
-  3 // rainbow
-};
+  // wait a bit - because we'll lose the LED as soon as we re-enable SPI
+  delay(50);
+  // re-enable SPI
+  SPCR = old_spcr;
 
-uint8_t read_number() {
-  while (1) {
-    while (!Serial.available());
-    uint8_t c = Serial.read();
-    if (c == 10 || c == 13) continue;
-    return c - '0';
-  }
-}
+  // send key over radio if necessary
+  if (key) {
+    uint8_t lamp_no = key / 4, mode = key % 4;
 
-void loop(void)
-{
-  uint8_t lamp_no;
-  while (1) {
-    printf("\nEnter the number of the lamp you want to control (1-%d).\r\n", (int)N_REMOTES);
-    lamp_no = read_number();
-    if (lamp_no < 1 || lamp_no > N_REMOTES) {
-      printf("Invalid lamp number!\r\n");
-      continue;
-    }
-    printf("Lamp %d selected.\r\n", lamp_no);
-    break;
-  }
-  uint8_t mode;
-  while (1) {
-    printf("Enter the number of the mode you want to switch it to:\r\n");
-    printf("  1 = chase mode\r\n");
-    printf("  2 = chill rainbow mode\r\n");
-    printf("Or 0 to cancel\r\n");
-    switch (read_number()) {
-      case 0: mode = 0; break; // cancel
-      case 1: mode = 2; break; // chase
-      case 2: mode = 3; break; // rainbow
-      default:
-        printf("Invalid mode number!\r\n");
-        continue;
-    }
-    break;
-  }
-  if (!mode) return; // 0 to cancel
-
-  uint8_t command[32];
-  command[0] = 3;
-  command[1] = mode;
-  memset(command+2, 0, 30);
-  if (transmit_single_command(lamp_no - 1, command)) {
-    printf("Command sent successfully\r\n");
-  } else {
-    printf("Unable to send command to lamp %d -- is it turned on and within range?\r\n", lamp_no);
+    uint8_t command[2];
+    command[0] = 3;
+    command[1] = mode;
+    transmit_single_command(lamp_no, command);
   }
 }
-
