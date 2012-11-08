@@ -1,4 +1,6 @@
+echo "copy"
 rsync --exclude=*~ -vrzu * pi:rpi_controller/
+echo "copy init script"
 ssh pi 'sudo cp rpi_controller/myelin_matrix_display.init.sh /etc/init.d/myelin_matrix_display'
-
-
+echo "restart"
+ssh pi 'sudo /etc/init.d/myelin_matrix_display restart'

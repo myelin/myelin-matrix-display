@@ -10,6 +10,7 @@ modes = {
     '5': 'rainbow',
     '6': 'strobe',
     '7': 'twinkle',
+    '8': 'white',
     }
 
 class Main:
