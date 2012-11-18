@@ -4,7 +4,7 @@
 #include <avr/io.h>
 
 // Display dimensions
-#define WIDTH 50
+#define WIDTH 55
 #define HEIGHT 1
 #define PIXEL_COUNT (WIDTH*HEIGHT)
 #if (PIXEL_COUNT < 256)
