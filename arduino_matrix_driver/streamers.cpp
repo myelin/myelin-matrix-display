@@ -46,6 +46,7 @@ void setup_streamers() {
 }
 
 void draw_streamers(int frame) {
+  if (!frame) setup_streamers();
   dim(150);
   set_frame_rate(15);
   for (int i = 0; i < N_STREAMERS; ++i) {

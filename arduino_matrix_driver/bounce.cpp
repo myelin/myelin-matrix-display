@@ -59,6 +59,7 @@ void setup_bounce() {
 }
 
 void draw_bounce(int frame) {
+  if (!frame) reset_bounce();
   set_frame_rate(15);
   dim(150);
   for (int i = 0; i < N_BALLS; ++i) {

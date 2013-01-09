@@ -13,6 +13,13 @@ void blank() {
   memset(draw_buf, 0, BUF_SIZE);
 }
 
+// doesn't work yet... no idea why!
+void fall() {
+  for (uint8_t y = HEIGHT - 1; y > 0; --y) {
+    memcpy(draw_buf + y * WIDTH * PIXEL_SIZE, draw_buf + (y-1) * WIDTH * PIXEL_SIZE, WIDTH * PIXEL_SIZE);
+  }
+}
+
 void point(int x, int y, unsigned char r, unsigned char g, unsigned char b) {
 #ifdef HORIZONTAL_ADDRESSING
   // monolithic matrix display (oct 2012) - snaking horizontally from top left corner.  original format, used at burning man 2012.

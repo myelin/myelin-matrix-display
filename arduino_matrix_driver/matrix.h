@@ -52,6 +52,7 @@ inline color_t color_mask(color_t c, color_t mask) {
 extern uint32_t random_color();
 extern void dim(int factor);
 extern void blank();
+extern void fall();
 extern void point(int x, int y, unsigned char r, unsigned char g, unsigned char b);
 extern void point(int x, int y, color_t c);
 extern void point_clip(int x, int y, color_t c);
@@ -63,6 +64,7 @@ extern color_t wheel(uint16_t pos);
 extern void serial_write(uint8_t c);
 
 extern void set_frame_rate(uint8_t frame_rate);
+extern void set_frames_per_mode(uint16_t frames_per_mode);
 extern uint8_t frame_rate;
 
 extern void next_mode();

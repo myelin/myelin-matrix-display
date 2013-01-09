@@ -3,6 +3,8 @@
 void draw_lines(int frame) {
   set_frame_rate(30);
   dim(240);
+  //fall(); // broken!
+  
   if ((frame % 10) == 0) {
     if (random(0, 2)) {
       // horizontal

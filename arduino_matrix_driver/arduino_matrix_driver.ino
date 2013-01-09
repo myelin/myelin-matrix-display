@@ -189,11 +189,12 @@ void set_frame_rate(uint8_t _frame_rate) {
   ms_per_frame = 1000 / _frame_rate;
 }
 
-int current_mode = 7;
+int current_mode = 1;
 
 void next_mode() {
   ++current_mode;
   current_frame = 0;
+  set_frames_per_mode(1000);
 }
 
 // /SS pin is active -- transmission is over or cancelled if !spi_selected()
@@ -214,6 +215,11 @@ ISR (SPI_STC_vect) {
   }
 }
 #endif
+
+uint16_t frames_per_mode = 300;
+void set_frames_per_mode(uint16_t _frames_per_mode) {
+  frames_per_mode = _frames_per_mode;
+}
 
 void loop() {
 #ifdef MATRIX_V2
@@ -365,16 +371,14 @@ void loop() {
   }
 #endif
 
-#define FRAMES_PER_MODE 300
-
-//#define INCLUDE_TEST
+#define INCLUDE_TEST
 #define INCLUDE_LINES
 //#define INCLUDE_EPILEPSY
 //#define INCLUDE_INSANE_LINES
 #define INCLUDE_BOUNCE
 #define INCLUDE_RAINBOW
 #define INCLUDE_STREAMERS
-#define INCLUDE_LUNACY
+//#define INCLUDE_LUNACY
 
   if ((now - last_serial_frame) > 500 && (now - last_ethernet_frame) > 500 && (now - last_frame) > ms_per_frame) {
     uint8_t handled;
@@ -412,7 +416,7 @@ void loop() {
       }
     } while (!handled);
     fast_show();
-    if (++current_frame >= FRAMES_PER_MODE) {
+    if (++current_frame >= frames_per_mode) {
       next_mode();
     }
     last_frame = now;
