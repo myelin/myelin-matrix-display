@@ -81,12 +81,12 @@ void loop() {
     do {
       handled = 1;
       switch (current_mode) {
-        case 0: draw_test(current_frame); break;
-        case 1: draw_lines(current_frame); break;
-        case 2: draw_epilepsy(current_frame); break;
-        case 3: draw_insane_lines(current_frame); break;
-        case 4: draw_bounce(current_frame); break;
-        case 5: draw_rainbow(current_frame); break;
+        case 0: draw_bounce(current_frame); break;
+        case 1: draw_test(current_frame); break;
+        case 2: draw_lines(current_frame); break;
+        case 3: draw_rainbow(current_frame); break;
+        case 4: draw_insane_lines(current_frame); break;
+//        case 5: draw_epilepsy(current_frame); break;
         default:
           handled = 0;
           if (++current_mode > 10) current_mode = 0;

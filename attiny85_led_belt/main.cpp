@@ -13,8 +13,9 @@ uint8_t pixel_data[WS2801_BUFFER_LEN];
 
 void setup() {
   ws2801_setup();
-  memset(pixel_data, 128, WS2801_BUFFER_LEN);
+  memset(pixel_data, 127, WS2801_BUFFER_LEN);
   led_show(pixel_data);
+  while (1); //DEBUG
 }
 
 extern void run_effects();
