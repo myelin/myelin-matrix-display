@@ -3,7 +3,7 @@
 void setup_animation() {
 }
 
-void draw_frame(int frame) {
+void draw_frame(ScreenBuffer *s, int frame) {
   static int from = 0, to = 0;
   static int pos = 0;
 
@@ -14,7 +14,7 @@ void draw_frame(int frame) {
 
   int c = color_fade(from, to, pos);
 
-  rect(0, 0, WIDTH, HEIGHT, c);
+  s->rect(0, 0, WIDTH, HEIGHT, c);
 
   if (++pos > 255) pos = 0;
 }

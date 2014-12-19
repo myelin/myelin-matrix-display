@@ -6,20 +6,20 @@ void setup_animation() {
   direction = pos = 0;
 }
 
-void draw_frame(int frame) {
-  blank();
+void draw_frame(ScreenBuffer *s, int frame) {
+  s->blank();
   //dim(128);
 
   // horizontal line
   // sweep to center
   printf("%d\n", pos);
   int hslowdown = 1;
-  rect(0, pos/hslowdown, WIDTH, pos/hslowdown+1, random_color());
-  rect(0, HEIGHT-1-pos/hslowdown, WIDTH, HEIGHT-1-pos/hslowdown+1, random_color());
+  s->rect(0, pos/hslowdown, WIDTH, pos/hslowdown+1, random_color());
+  s->rect(0, HEIGHT-1-pos/hslowdown, WIDTH, HEIGHT-1-pos/hslowdown+1, random_color());
   // vertical lines
   // sweep to center
-  rect(pos, 0, pos+1, HEIGHT, random_color());
-  rect(WIDTH-1-pos, 0, WIDTH-1-pos+1, HEIGHT, random_color());
+  s->rect(pos, 0, pos+1, HEIGHT, random_color());
+  s->rect(WIDTH-1-pos, 0, WIDTH-1-pos+1, HEIGHT, random_color());
   if (++pos > WIDTH/2) {
     pos = 0;
   }
@@ -35,8 +35,8 @@ void draw_frame(int frame) {
     }*/
     // sweep to center
     int hslowdown = 1;
-    rect(0, pos/hslowdown, WIDTH, pos/hslowdown+1, random_color());
-    rect(0, HEIGHT-1-pos/hslowdown, WIDTH, HEIGHT-1-pos/hslowdown+1, random_color());
+    s->rect(0, pos/hslowdown, WIDTH, pos/hslowdown+1, random_color());
+    s->rect(0, HEIGHT-1-pos/hslowdown, WIDTH, HEIGHT-1-pos/hslowdown+1, random_color());
     if (++pos > HEIGHT/2*hslowdown) {
       pos = 0;
       direction = 0;
@@ -44,8 +44,8 @@ void draw_frame(int frame) {
   } else {
     // vertical lines
     // sweep to center
-    rect(pos, 0, pos+1, HEIGHT, random_color());
-    rect(WIDTH-1-pos, 0, WIDTH-1-pos+1, HEIGHT, random_color());
+    s->rect(pos, 0, pos+1, HEIGHT, random_color());
+    s->rect(WIDTH-1-pos, 0, WIDTH-1-pos+1, HEIGHT, random_color());
     if (++pos > WIDTH/2) {
       pos = 0;
       direction = 1;

@@ -6,9 +6,9 @@ void setup_animation() {
   pos = 0;
 }
 
-void draw_frame(int frame) {
+void draw_frame(ScreenBuffer *s, int frame) {
 	set_frame_rate(5);
-	blank();
-	line(pos, 0, pos, HEIGHT, random_color());
+	s->blank();
+	s->line(pos, 0, pos, HEIGHT, random_color());
 	pos = (pos + 1) % WIDTH;
 }

@@ -7,8 +7,8 @@ endif
 CFLAGS = -Wall -O2 $(PLAT)
 
 CFILES = main.cpp graphics.cpp
-PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers lunacy ripples fade
-DISABLED = chill test life sweep
+PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers lunacy ripples fade chill test life sweep
+DISABLED = 
 DEPS = matrix.h
 
 all: $(PROJECTS) $(SPECIALS)

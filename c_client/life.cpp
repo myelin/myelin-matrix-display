@@ -32,13 +32,13 @@ void setup_animation() {
   evolve();
 }
 
-void draw_frame(int frame) {
+void draw_frame(ScreenBuffer *s, int frame) {
   set_frame_rate(RATE * FADE_STEPS);
   for (int y = 0; y < HEIGHT; ++y) {
     for (int x = 0; x < WIDTH; ++x) {
       int c = last.cells[y][x] * MAX_COLOR * (FADE_STEPS - pos) / FADE_STEPS
 	+ next.cells[y][x] * MAX_COLOR * pos / FADE_STEPS;
-      point(x, y, color(c, c, c));
+      s->point(x, y, color(c, c, c));
     }
   }
   if (++pos >= FADE_STEPS) {
