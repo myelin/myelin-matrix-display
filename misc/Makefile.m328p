@@ -1,0 +1,25 @@
+UNAME := $(shell uname)
+
+ifeq ($(UNAME), Darwin)
+  ARDUINO_DIR = /Applications/Arduino.app/Contents/Resources/Java
+  AVR_TOOLS_PATH = $(ARDUINO_DIR)/hardware/tools/avr/bin
+  ARD_PARSE_BOARDS = ../misc/ard-parse-boards
+#  AVRDUDE = ../misc/avrdude
+#  AVRDUDE_CONF = ../misc/avrdude.conf
+  AVRDUDE_CONF = $(ARDUINO_DIR)/hardware/tools/avr/etc/avrdude.conf
+#  AVRDUDE_USE_SUDO = 1
+#  AVRDUDE_UNLOAD_FTDI = 1
+#  ISP_PORT = ft0
+endif
+ifeq ($(UNAME), Linux)
+  ARDUINO_DIR = /usr/share/arduino
+endif
+
+AVRDUDE_VERBOSE = 1
+BOARD_TAG = pro328
+ISP_PROG = -c usbtiny -B 1
+
+include ../misc/Arduino.mk
+
+disassemble: $(TARGET_ELF)
+	$(AVR_TOOLS_PATH)/avr-objdump -S $(TARGET_ELF)
