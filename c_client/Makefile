@@ -7,18 +7,14 @@ endif
 CFLAGS = -Wall -O2 $(PLAT)
 
 CFILES = main.cpp graphics.cpp
-PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers lunacy
-DISABLED = fade chill test life sweep sweep
-SPECIALS = ripples
+PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers lunacy ripples fade
+DISABLED = chill test life sweep sweep
 DEPS = matrix.h
 
 all: $(PROJECTS) $(SPECIALS)
 
 clean:
 	rm -rf $(PROJECTS) $(SPECIALS) *~ *.dSYM
-
-ripples: ripples.cpp $(CFILES) $(DEPS)
-	g++ $(CFLAGS) -o ripples $(CFILES) ripples.cpp
 
 $(PROJECTS): %: %.cpp $(CFILES) $(DEPS)
 	g++ $(CFLAGS) -g -o $@ $< $(CFILES)
