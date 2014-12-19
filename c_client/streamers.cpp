@@ -15,16 +15,16 @@ class Streamer {
     } while (!xv && !yv);
     c = random_color();
   }
-  void move() {
+  void move(ScreenBuffer *s) {
     if (delay) {
       --delay;
       return;
     }
-    point(x, y, c);
-    point_clip(x-1, y, c);
-    point_clip(x+1, y, c);
-    point_clip(x, y-1, c);
-    point_clip(x, y+1, c);
+    s->point(x, y, c);
+    s->point_clip(x-1, y, c);
+    s->point_clip(x+1, y, c);
+    s->point_clip(x, y-1, c);
+    s->point_clip(x, y+1, c);
     x += xv;
     y += yv;
     if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) {
@@ -45,11 +45,11 @@ void setup_animation() {
   }
 }
 
-void draw_frame(int frame) {
-  dim(150);
+void draw_frame(ScreenBuffer *s, int frame) {
+  s->dim(150);
   set_frame_rate(15);
   for (int i = 0; i < N_STREAMERS; ++i) {
     //printf("streamer %d: height %d v %d delay %d\n", i, streamers[i].y, streamers[i].v, streamers[i].delay);
-    streamers[i].move();
+    streamers[i].move(s);
   }
 }
