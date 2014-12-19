@@ -20,7 +20,7 @@ clean:
 ripples: ripples.cpp $(CFILES) $(DEPS)
 	g++ $(CFLAGS) -o ripples $(CFILES) ripples.cpp
 
-$(PROJECTS): %: %.c $(CFILES) $(DEPS)
+$(PROJECTS): %: %.cpp $(CFILES) $(DEPS)
 	g++ $(CFLAGS) -g -o $@ $< $(CFILES)
 
 push:
