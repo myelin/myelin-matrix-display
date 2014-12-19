@@ -1,5 +1,7 @@
 #include "matrix.h"
 #include <math.h>
+#include <list>
+using namespace std;
 
 #define INITIAL_MAX 1
 #define FADE_RATE 5
@@ -10,9 +12,9 @@ class Twinkle {
   color_t c;
   int phase;
   Twinkle() { x = y = 0; c = 0; phase = 0; }
-  int update() {
+  int update(ScreenBuffer *s) {
     double brightness = sin((double)phase / 255.0 * M_PI);
-    point(x, y, color_mult(c, brightness));
+    s->point(x, y, color_mult(c, brightness));
     phase += FADE_RATE;
     if (phase > 255) return 1;
     return 0;
@@ -36,9 +38,9 @@ void add_twinkle() {
 void setup_animation() {
 }
 
-void draw_frame(int frame) {
+void draw_frame(ScreenBuffer *s, int frame) {
   set_frame_rate(25);
-  dim(200);
+  s->dim(200);
 
   if (--frames_until_next <= 0) {
     add_twinkle();
@@ -49,7 +51,7 @@ void draw_frame(int frame) {
   printf("%d twinkles\n", (int)twinkles.size());
   for (Twinkle_list::iterator it = twinkles.begin(); it != twinkles.end();) {
     Twinkle_list::iterator next = it; ++next;
-    if (it->update()) {
+    if (it->update(s)) {
       twinkles.erase(it); // remove twinkle
     }
     it = next;

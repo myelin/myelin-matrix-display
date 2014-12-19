@@ -8,7 +8,7 @@ CFLAGS = -Wall -O2 $(PLAT)
 
 CFILES = main.cpp graphics.cpp
 PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers lunacy ripples fade
-DISABLED = chill test life sweep sweep
+DISABLED = chill test life sweep
 DEPS = matrix.h
 
 all: $(PROJECTS) $(SPECIALS)

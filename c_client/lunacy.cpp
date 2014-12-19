@@ -12,10 +12,10 @@ static color_t lunacy_pix(int x, int y) {
   return lunacy_logo_mask_data[byte] & (0x80 >> offset) ? WHITE : BLACK;
 }
 
-static void draw_offset_mult(int offset, float blend, float mult, color_t mask) {
-  for (uint16_t y = 0; y < MIN(HEIGHT, lunacy_logo_mask_height); ++y) {
-    for (uint16_t x = 0; x < MIN(WIDTH, lunacy_logo_mask_width); ++x) {
-      point(x, y, color_add(
+static void draw_offset_mult(ScreenBuffer *s, int offset, float blend, float mult, color_t mask) {
+  for (uint16_t y = 0; y < min(HEIGHT, lunacy_logo_mask_height); ++y) {
+    for (uint16_t x = 0; x < min(WIDTH, lunacy_logo_mask_width); ++x) {
+      s->point(x, y, color_add(
 		      color_mask(color_mult(lunacy_pix(x + offset, y), mult * (1-blend)), mask),
 		      color_mask(color_mult(lunacy_pix(x + offset + 1, y), mult * blend), mask)
 		      ));
@@ -23,13 +23,15 @@ static void draw_offset_mult(int offset, float blend, float mult, color_t mask) 
   }
 }
 
-static void fade(int offset, float blend, int start, int end, int period) {
+/*
+static void fade(ScreenBuffer *s, int offset, float blend, int start, int end, int period) {
   color_t mask = random_color();
   for (int pos = 0; pos < period; ++pos) {
     float mult = float(pos)/period;
-    draw_offset_mult(offset, blend, start + (end - start) * mult, mask);
+    draw_offset_mult(s, offset, blend, start + (end - start) * mult, mask);
   }
 }
+*/
 
 void setup_animation() {
 }
@@ -48,7 +50,7 @@ static void next_state() {
   frames_in_current_state = 0;
 }
 
-void draw_frame(int frame) {
+void draw_frame(ScreenBuffer *s, int frame) {
   set_frame_rate(25);
   uint8_t max_offset = lunacy_logo_mask_width - WIDTH - 1;
   static color_t current_color;
@@ -58,7 +60,7 @@ void draw_frame(int frame) {
   case RANDOM_JITTER_2: {
 #define RANDOM_JITTER_FRAMES (frame_rate * 2)
     if (frames_in_current_state < RANDOM_JITTER_FRAMES) {
-      draw_offset_mult(rand() % max_offset, 0, 1, random_color());
+      draw_offset_mult(s, rand() % max_offset, 0, 1, random_color());
     } else {
       next_state();
     }
@@ -72,7 +74,7 @@ void draw_frame(int frame) {
       float pos = (float)frames_in_current_state / SCROLL_LOGO_FRAMES * max_offset;
       uint8_t offset = (uint8_t)pos;
       float blend = pos - offset;
-      draw_offset_mult(offset, blend, 1.0, wheel(frames_in_current_state * WHEEL_MAX / SCROLL_LOGO_FRAMES));
+      draw_offset_mult(s, offset, blend, 1.0, wheel(frames_in_current_state * WHEEL_MAX / SCROLL_LOGO_FRAMES));
     }
     break;
   }
@@ -84,7 +86,7 @@ void draw_frame(int frame) {
     } else {
       uint8_t fade_pos = frames_in_current_state % FRAMES_PER_SCROLL_FADE;
       if (!fade_pos) current_color = wheel(fade_offset * WHEEL_MAX / max_offset);
-      draw_offset_mult(fade_offset, 0, 1.0 - ((float)frames_in_current_state / FRAMES_PER_SCROLL_FADE), current_color);
+      draw_offset_mult(s, fade_offset, 0, 1.0 - ((float)frames_in_current_state / FRAMES_PER_SCROLL_FADE), current_color);
     }
     break;
   }
