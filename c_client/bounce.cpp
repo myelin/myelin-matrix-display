@@ -13,7 +13,7 @@ class Ball {
     v = 0;
     c = random_color();
   }
-  void fall() {
+  void fall(ScreenBuffer *s) {
     if (delay) {
       --delay;
       return;
@@ -34,7 +34,7 @@ class Ball {
 
     int yy = HEIGHT - 1 - (y/10);
     //rect(0, HEIGHT-1-(y/10), WIDTH, HEIGHT-1-(y/10)+1, c);
-    point(x, yy, c);
+    s->point(x, yy, c);
   }
 };
 
@@ -49,11 +49,11 @@ void setup_animation() {
   }
 }
 
-void draw_frame(int frame) {
-  dim(150);
+void draw_frame(ScreenBuffer *s, int frame) {
+  s->dim(150);
   set_frame_rate(15);
   for (int i = 0; i < N_BALLS; ++i) {
     //printf("ball %d: height %d v %d delay %d\n", i, balls[i].y, balls[i].v, balls[i].delay);
-    balls[i].fall();
+    balls[i].fall(s);
   }
 }
