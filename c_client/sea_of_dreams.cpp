@@ -1,28 +1,22 @@
-#include "matrix.h"
-#include "bbc_font.h"
+#include "sea_of_dreams.h"
 
-class SeaOfDreams {
- public:
-  int update(ScreenBuffer *s) {
-  	return 0;
+SeaOfDreamsOverlay::SeaOfDreamsOverlay(ScreenBuffer *main) {
+	output = new ScreenBuffer(main->width, main->height);
+  tx = 0;
+}
+
+ScreenBuffer *SeaOfDreamsOverlay::overlay(ScreenBuffer *screen, int frame) {
+	screen->copy(output);
+
+#define FRAMES_PER_PIXEL 3
+  if (!(frame % FRAMES_PER_PIXEL)) {
+    //printf("MOVE\n");
+    tx--;
   }
-};
+  double subpix = 1.0 - (double)(frame % FRAMES_PER_PIXEL) / FRAMES_PER_PIXEL;
+  //printf("%f\n", subpix);
+  output->text(tx, 2, 0xffffffL, "dream believe receive    live your dreams    SEA OF DREAMS", subpix);
+  //screen->add_subpix(10, 0, 0xffffffL, subpix);
 
-class SeaOfDreamsRenderer : public Animation {
-public:
-	int x;
-
-	SeaOfDreamsRenderer(): Animation() {
-		x = 0;
-	}
-
-	void draw(ScreenBuffer *screen, int frame) {
-		set_frame_rate(5);
-		screen->dim(100);
-		screen->point(randint(0, screen->width), randint(0, screen->height), random_color());
-		screen->text(x, 1, 0xffffffL, "hello!  this is a TEST!  rawr :P bahaha");
-		x--;
-	}
-};
-
-DECLARE_DISPLAY_CLASS(SeaOfDreamsRenderer);
+  return output;
+}

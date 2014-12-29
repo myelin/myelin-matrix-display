@@ -1,3 +1,6 @@
+#ifndef __MATRIX_H
+#define __MATRIX_H
+
 #include "project_config.h"
 #include "graphics.h"
 
@@ -14,3 +17,5 @@ extern ScreenBuffer *graphics_prep_frame(int frame);
 // implemented by the particular animation we're compiling
 extern void setup_animation();
 extern void draw_frame(ScreenBuffer *screen, int frame);
+
+#endif // __MATRIX_H

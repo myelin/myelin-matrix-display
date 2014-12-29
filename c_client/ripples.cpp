@@ -80,14 +80,4 @@ void draw_frame(ScreenBuffer *main_screen, int frame) {
   snake_buf.vertical_snake_transform(main_screen);
 #endif
 
-  static int tx = 0;
-#define FRAMES_PER_PIXEL 3
-  if (!(frame % FRAMES_PER_PIXEL)) {
-    printf("MOVE\n");
-    tx--;
-  }
-  double subpix = 1.0 - (double)(frame % FRAMES_PER_PIXEL) / FRAMES_PER_PIXEL;
-  printf("%f\n", subpix);
-  main_screen->text(tx, 2, 0xffffffL, "dream believe receive    live your dreams    SEA OF DREAMS", subpix);
-  //main_screen->add_subpix(10, 0, 0xffffffL, subpix);
 }

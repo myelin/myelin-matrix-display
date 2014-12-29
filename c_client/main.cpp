@@ -48,16 +48,27 @@ void send_to_display(ScreenBuffer* buffer) {
 #endif
 }
 
+#ifdef SEA_OF_DREAMS
+#include "sea_of_dreams.h"
+#endif
+
 int main() {
   graphics_setup();
   setup_display();
   setup_animation();
+
+#ifdef SEA_OF_DREAMS
+  SeaOfDreamsOverlay sea_of_dreams_overlay(graphics_get_buffer());
+#endif
 
   struct timeval last, start, now;
   gettimeofday(&last, NULL);
   for (int frame = 0; ; ++frame) {
     gettimeofday(&start, NULL);
     ScreenBuffer* draw_buf = graphics_prep_frame(frame);
+#ifdef SEA_OF_DREAMS
+    draw_buf = sea_of_dreams_overlay.overlay(draw_buf, frame);
+#endif
     printf("sending frame %d to display\n", frame);
 
     gettimeofday(&now, NULL);

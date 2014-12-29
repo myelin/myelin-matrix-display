@@ -1,3 +1,6 @@
+#ifndef __GRAPHICS_H
+#define __GRAPHICS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,3 +101,5 @@ inline color_t color_mask(color_t c, color_t mask) {
 }
 #define WHEEL_MAX 768
 extern color_t wheel(uint16_t pos);
+
+#endif // __GRAPHICS_H
