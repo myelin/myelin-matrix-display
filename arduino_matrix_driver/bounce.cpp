@@ -1,22 +1,20 @@
-#include <stdlib.h>
 #include "matrix.h"
 
 class Ball {
  public:
   int x, y, xv, v, delay;
-  uint32_t c;
+  color_t c;
   Ball() {
     reset();
   }
   void reset() {
-    x = random(0, WIDTH - 1);
+    x = rand() % WIDTH;
     y = HEIGHT * 10 - 5;
-    xv = random(-1, 1);
+    xv = (rand() % 3) - 1;
     v = 0;
     c = random_color();
-    delay = random(0, 99);
   }
-  void fall() {
+  void fall(ScreenBuffer *s) {
     if (delay) {
       --delay;
       return;
@@ -37,7 +35,7 @@ class Ball {
 
     int yy = HEIGHT - 1 - (y/10);
     //rect(0, HEIGHT-1-(y/10), WIDTH, HEIGHT-1-(y/10)+1, c);
-    point(x, yy, c);
+    s->point(x, yy, c);
   }
 };
 
@@ -48,22 +46,15 @@ static Ball balls[N_BALLS];
 
 void reset_bounce() {
   for (int i = 0; i < N_BALLS; ++i) {
-    balls[i].reset();
+    balls[i].delay = rand() % 100;
   }
 }
 
-void setup_bounce() {
-  for (int i = 0; i < N_BALLS; ++i) {
-    balls[i].delay = random(0, 99);
-  }
-}
-
-void draw_bounce(int frame) {
-  if (!frame) reset_bounce();
+void draw_bounce(ScreenBuffer *s, int frame) {
+  s->dim(150);
   set_frame_rate(15);
-  dim(150);
   for (int i = 0; i < N_BALLS; ++i) {
     //printf("ball %d: height %d v %d delay %d\n", i, balls[i].y, balls[i].v, balls[i].delay);
-    balls[i].fall();
+    balls[i].fall(s);
   }
 }

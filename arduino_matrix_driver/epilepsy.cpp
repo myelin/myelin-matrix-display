@@ -1,12 +1,9 @@
 #include "matrix.h"
 
-void draw_epilepsy(int frame) {
-  set_frame_rate(30);
+void setup_animation() {
+}
 
-  if ((rand() % 6) == 0) {
-    uint32_t c = random_color();
-    rect(0, 0, WIDTH, HEIGHT, c);
-  } else {
-    blank();
-  }
+void draw_frame(ScreenBuffer *s, int frame) {
+  int c = ((rand() % 6) == 0) ? (rand() & 0xFFFFFF) : 0;
+  s->rect(0, 0, WIDTH, HEIGHT, c);
 }

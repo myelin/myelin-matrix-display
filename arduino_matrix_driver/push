@@ -1,0 +1,3 @@
+# program the atmega328p on the mx2 board (attached to the raspberry pi that drives the matrix)
+
+make && rsync -vzu build-cli/*.hex pi:build-cli/ && make ispload

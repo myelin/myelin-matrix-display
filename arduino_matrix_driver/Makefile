@@ -23,6 +23,8 @@ AVRDUDE_VERBOSE = 1
 #OPTIMIZATION = -O2
 include ../misc/Arduino.mk
 
+default: $(TARGET_HEX)
+
 disassemble: $(TARGET_ELF)
 	$(AVR_TOOLS_PATH)/avr-objdump -S $(TARGET_ELF)
 

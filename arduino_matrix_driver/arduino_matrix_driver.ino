@@ -58,7 +58,7 @@ EthernetUDP Udp;
 #endif
 
 // LED control
-Adafruit_WS2801_PP strip = Adafruit_WS2801_PP(PIXEL_COUNT, WS2801_ARDUINO_DATA, WS2801_ARDUINO_CLOCK);
+Adafruit_WS2801_PP strip = Adafruit_WS2801_PP(WIDTH * HEIGHT, WS2801_ARDUINO_DATA, WS2801_ARDUINO_CLOCK);
 
 // quickly (6.25ms) bit-bang 900 bytes into the ws2801 strip
 void fast_show() {
@@ -108,17 +108,16 @@ void serial_print(const char* s) {
   }
 }
 
-extern void draw_test(int frame);
-extern void setup_bounce();
+extern void draw_test(ScreenBuffer *s, int frame);
 extern void reset_bounce();
-extern void draw_bounce(int frame);
-extern void draw_lines(int frame);
-extern void draw_insane_lines(int frame);
-extern void draw_epilepsy(int frame);
-extern void draw_rainbow(int frame);
+extern void draw_bounce(ScreenBuffer *s, int frame);
+extern void draw_lines(ScreenBuffer *s, int frame);
+extern void draw_insane_lines(ScreenBuffer *s, int frame);
+extern void draw_epilepsy(ScreenBuffer *s, int frame);
+extern void draw_rainbow(ScreenBuffer *s, int frame);
 extern void setup_streamers();
-extern void draw_streamers(int frame);
-extern void draw_lunacy(int frame);
+extern void draw_streamers(ScreenBuffer *s, int frame);
+extern void draw_lunacy(ScreenBuffer *s, int frame);
 
 void setup() {
 #ifdef MX_USE_ETHERNET
@@ -150,16 +149,15 @@ void setup() {
 
   // set LEDs weakly on in R/G/B pattern.
   strip.begin();
-  /*  uint8_t c = random(0, 255);
+  ScreenBuffer *s = graphics_setup(strip.pixels);
+
+  /*uint8_t c = random(0, 255);
   for (uint8_t y = 0; y < HEIGHT; ++y) {
     for (uint8_t x = 0; x < WIDTH; ++x) {
       strip.setPixelColor(y * WIDTH + x, (x + y + c) % 24, (x + y + c + 8) % 24, (x + y + c + 16) % 24);
     }
     }*/
-  point(0, 0, 0xFFFFFFL);
-  point(24, 0, 0xFFFFFFL);
-  point(0, 11, 0xFFFFFFL);
-  point(24, 11, 0xFFFFFFL);
+  s->corner_points(0xFFFFFFL);
   fast_show();
 
   // set up UART
@@ -176,7 +174,7 @@ void setup() {
   serial_print("OK.\n");
 
   // set up modes
-  setup_bounce();
+  reset_bounce();
   setup_streamers();
 }
 
@@ -184,7 +182,7 @@ long last_serial_frame = 0, last_ethernet_frame = 0, last_frame = 0;
 int current_frame = 0;
 uint8_t ms_per_frame = 30, frame_rate = 33;
 
-void set_frame_rate(uint8_t _frame_rate) {
+void set_frame_rate(int _frame_rate) {
   frame_rate = _frame_rate;
   ms_per_frame = 1000 / _frame_rate;
 }
@@ -232,7 +230,6 @@ void loop() {
     pinMode(WS2801_ARDUINO_DATA, OUTPUT);
     pinMode(WS2801_ARDUINO_CLOCK, OUTPUT);
     // slow start
-    blank();
     reset_bounce(); // my favourite mode...
   }
 #endif
@@ -353,13 +350,14 @@ void loop() {
         }
       }
 #elif defined VERTICAL_ADDRESSING
+      ScreenBuffer* s = graphics_get_buffer();
       // read a row at a time
       uint8_t packet_buffer[ETH_WIDTH * PIXEL_SIZE];
       for (int y = 0; y < HEIGHT; ++y) {
         Udp.read(packet_buffer, ETH_WIDTH * PIXEL_SIZE);
         uint8_t *in = packet_buffer;
         for (int x = 0; x < WIDTH; ++x) {
-          point(x, y, *in++, *in++, *in++);
+          s->point(x, y, *in++, *in++, *in++);
         }
       }
 #endif
@@ -386,28 +384,28 @@ void loop() {
       handled = 1;
       switch (current_mode) {
 #ifdef INCLUDE_TEST
-        case 0: draw_test(current_frame); break;
+        case 0: draw_test(graphics_get_buffer(), current_frame); break;
 #endif
 #ifdef INCLUDE_LINES
-        case 1: draw_lines(current_frame); break;
+        case 1: draw_lines(graphics_get_buffer(), current_frame); break;
 #endif
 #ifdef INCLUDE_EPILEPSY
-        case 2: draw_epilepsy(current_frame); break;
+        case 2: draw_epilepsy(graphics_get_buffer(), current_frame); break;
 #endif
 #ifdef INCLUDE_INSANE_LINES
-        case 3: draw_insane_lines(current_frame); break;
+        case 3: draw_insane_lines(graphics_get_buffer(), current_frame); break;
 #endif
 #ifdef INCLUDE_BOUNCE
-        case 4: draw_bounce(current_frame); break;
+        case 4: draw_bounce(graphics_get_buffer(), current_frame); break;
 #endif
 #ifdef INCLUDE_RAINBOW
-        case 5: draw_rainbow(current_frame); break;
+        case 5: draw_rainbow(graphics_get_buffer(), current_frame); break;
 #endif
 #ifdef INCLUDE_STREAMERS
-        case 6: draw_streamers(current_frame); break;
+        case 6: draw_streamers(graphics_get_buffer(), current_frame); break;
 #endif
 #ifdef INCLUDE_LUNACY
-        case 7: draw_lunacy(current_frame); break;
+        case 7: draw_lunacy(graphics_get_buffer(), current_frame); break;
 #endif
         default:
           handled = 0;
