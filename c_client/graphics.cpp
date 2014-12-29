@@ -1,21 +1,20 @@
 #include "matrix.h"
+#include "bbc_font.h"
 
-ScreenBuffer *main_draw_buf;
-
-int frame_rate = 30;
-
-void set_frame_rate(int rate) {
-  frame_rate = rate;
-}
-
-ScreenBuffer::ScreenBuffer(int w, int h)
-  : width(w), height(h)
+ScreenBuffer::ScreenBuffer(int w, int h, uint8_t* pixels)
+  : width(w), height(h), draw_buf(pixels), should_free_draw_buf(false)
 {
-  draw_buf = new uint8_t[buf_size()];
+  if (!pixels) {
+    draw_buf = new uint8_t[buf_size()];
+    should_free_draw_buf = true;
+  }
+  blank();
 }
 
 ScreenBuffer::~ScreenBuffer() {
-  delete draw_buf;
+  if (should_free_draw_buf) {
+    delete draw_buf;
+  }
 }
 
 void ScreenBuffer::dim(int factor) {
@@ -25,8 +24,18 @@ void ScreenBuffer::dim(int factor) {
 }
 
 unsigned char* ScreenBuffer::ptr_for_point(int x, int y) {
+#if defined(VERTICAL_ADDRESSING)
+  // modular matrix display (sep 2012) - snaking vertically from top left corner, so there's only one connection between each pair of panels, rather than 12.
+  int pos = ((x & 1) ? ((x + 1) * HEIGHT - 1 - y) : (x * HEIGHT + y)) * 3;
+#elif defined(HORIZONTAL_ADDRESSING)
+  // monolithic matrix display (oct 2012) - snaking horizontally from top left corner.  original format, used at burning man 2012.
+  int pos = (y * WIDTH + (y & 1 ? (WIDTH - 1 - x) : x)) * 3;
+#else
+  // simple addressing
   int pos = 3 * (y * width + x);
-  if (pos > buf_size()) return NULL;
+#endif
+
+  if (pos < 0 || pos > buf_size()) return NULL;
   unsigned char* ptr = draw_buf + pos;
   if (ptr < draw_buf || ptr > draw_buf + buf_size()) return NULL;
   return ptr;
@@ -52,6 +61,24 @@ void ScreenBuffer::point_clip(int x, int y, color_t c) {
   if (x >= 0 && x < width && y >= 0 && y < height) {
     point(x, y, c);
   }
+}
+
+void ScreenBuffer::add(int x, int y, color_t c) {
+  if (x >= 0 && x < width && y >= 0 && y < height) {
+    point(x, y, color_add(c, getpoint(x, y)));
+  }
+}
+
+void ScreenBuffer::add_subpix(int x, int y, color_t c, double subpix) {
+  add(x, y, color_mult(c, 1-subpix));
+  add(x+1, y, color_mult(c, subpix));
+}
+
+void ScreenBuffer::corner_points(color_t c) {
+  point(0, 0, c);
+  point(width-1, 0, c);
+  point(0, height-1, c);
+  point(width-1, height-1, c);
 }
 
 color_t ScreenBuffer::getpoint(int x, int y) {
@@ -127,6 +154,48 @@ void ScreenBuffer::circle(int cx, int cy, int r, color_t c) {
   }
 }
 
+int ScreenBuffer::text(int x, int y, color_t c, const char* s, double subpix) {
+  // x, y = top left corner of text
+  // cx, y = top left corner of the current character
+  // xx, yy = coordinates within current character
+
+  int cx = x;
+  for (const char* ptr = s; *ptr; ++ptr) {
+    //printf("write char %c at %d,%d\n", *ptr, cx, y);
+    if (*ptr == ' ') {
+      cx += 4;
+      continue;
+    }
+    // find c in font
+    unsigned char* chardata = NULL;
+    for (int i = 0; i < BBC_FONT_N_CHARS; ++i) {
+      if (bbc_font[i * 9] == *ptr) {
+        chardata = bbc_font + i * 9 + 1;
+        break;
+      }
+    }
+    if (!chardata) {
+      printf("  couldn't find character %c\n", *ptr);
+    } else {
+      unsigned char rightmost = 0;
+      for (int yy = 0; yy < 8; ++yy, ++chardata) {
+        //printf("  plotting row %d of character %c (%02x) at %d,%d\n", yy, *ptr, *chardata, cx, y+yy);
+        for (int xx = 0; xx < 8; ++xx) {
+          //printf("%c ", (*chardata) & (1 << (7-xx)) ? 'x' : '.');
+          if ((*chardata) & (1 << (7-xx))) {
+            add_subpix(cx+xx, y+yy, c, subpix);
+            if (xx > rightmost) rightmost = xx;
+          }
+        }
+        //printf("\n");
+      }
+      //printf("update cx %d + %d\n", cx, rightmost);
+      cx += rightmost + 2;
+    }
+  }
+  return cx;
+}
+
 void ScreenBuffer::blank() {
   memset(draw_buf, 0, buf_size());
 }
@@ -198,7 +267,7 @@ int randint(int min_inclusive, int max_inclusive) {
 }
 
 color_t random_color() {
-  return rand() & 0xFFFFFF;
+  return random() & 0xFFFFFFL;
 }
 
 color_t color_fade(color_t color1, color_t color2, int pos) {
@@ -245,14 +314,4 @@ color_t wheel(uint16_t pos) {
     pos -= 512;
     return color(pos, 0, 255 - pos);
   }
-}
-
-ScreenBuffer *graphics_setup() {
-  main_draw_buf = new ScreenBuffer(WIDTH, HEIGHT);
-  return main_draw_buf;
-}
-
-ScreenBuffer *graphics_prep_frame(int frame) {
-  draw_frame(main_draw_buf, frame);
-  return main_draw_buf;
 }

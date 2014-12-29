@@ -6,10 +6,14 @@ else
 endif
 CFLAGS = -Wall -O2 $(PLAT)
 
-CFILES = main.cpp graphics.cpp
-PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers lunacy ripples fade chill test life sweep
+CFILES = main.cpp graphics.cpp matrix.cpp bbc_font.cpp
+PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers lunacy ripples fade chill test life sweep sea_of_dreams
 DISABLED = 
-DEPS = matrix.h
+DEPS = matrix.h bbc_font.h bbc_font_data.h
+
+bbc_font_data.h:
+	echo "bbc_font_data.h not included in public git repository to keep everything safe to distribute"
+	exit 1
 
 all: $(PROJECTS) $(SPECIALS)
 
@@ -17,6 +21,7 @@ clean:
 	rm -rf $(PROJECTS) $(SPECIALS) *~ *.dSYM
 
 $(PROJECTS): %: %.cpp $(CFILES) $(DEPS)
+	python preprocess.py $<
 	g++ $(CFLAGS) -g -o $@ $< $(CFILES)
 
 push:
