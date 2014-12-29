@@ -270,6 +270,11 @@ color_t random_color() {
   return random() & 0xFFFFFFL;
 }
 
+color_t random_greyscale() {
+  uint8_t c = (uint8_t)random();
+  return color(c, c, c);
+}
+
 color_t color_fade(color_t color1, color_t color2, int pos) {
   int r1 = (color1 >> 16) & 0xFF, g1 = (color1 >> 8) & 0xFF, b1 = color1 & 0xFF;
   int r2 = (color2 >> 16) & 0xFF, g2 = (color2 >> 8) & 0xFF, b2 = color2 & 0xFF;

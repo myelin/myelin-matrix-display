@@ -8,9 +8,11 @@
 
 typedef uint32_t color_t;
 
+#ifndef min
 // arduino compatibility
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 #define max(a, b) (((a) > (b)) ? (a) : (b))
+#endif
 
 class Animation;
 class ScreenBuffer;
@@ -83,6 +85,7 @@ inline uint8_t blue_from_color(color_t c) { return (uint8_t)(c & 0xFF); }
 extern int randint(int min_inclusive, int max_inclusive);
 
 extern color_t random_color();
+extern color_t random_greyscale();
 extern color_t color_fade(color_t color1, color_t color2, int pos);
 inline color_t color_add(color_t c, color_t c2) {
   return color(clipping_add(red_from_color(c), red_from_color(c2)),

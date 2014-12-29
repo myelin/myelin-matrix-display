@@ -13,7 +13,7 @@ ifdef SEA_OF_DREAMS
 CFILES += sea_of_dreams.cpp
 CFLAGS += -DSEA_OF_DREAMS
 endif
-PROJECTS = white epilepsy bounce strobe chase rainbow black twinkle streamers lunacy ripples fade chill test life sweep
+PROJECTS = starfield ripples bounce chase streamers white epilepsy strobe rainbow black twinkle lunacy fade chill test life sweep
 DISABLED = 
 DEPS = matrix.h bbc_font.h bbc_font_data.h
 

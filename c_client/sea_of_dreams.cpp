@@ -8,6 +8,8 @@ SeaOfDreamsOverlay::SeaOfDreamsOverlay(ScreenBuffer *main) {
 ScreenBuffer *SeaOfDreamsOverlay::overlay(ScreenBuffer *screen, int frame) {
 	screen->copy(output);
 
+//#define OVERLAY_C 0xffffffL
+#define OVERLAY_C 0x808080L
 #define FRAMES_PER_PIXEL 3
   if (!(frame % FRAMES_PER_PIXEL)) {
     //printf("MOVE\n");
@@ -15,7 +17,7 @@ ScreenBuffer *SeaOfDreamsOverlay::overlay(ScreenBuffer *screen, int frame) {
   }
   double subpix = 1.0 - (double)(frame % FRAMES_PER_PIXEL) / FRAMES_PER_PIXEL;
   //printf("%f\n", subpix);
-  output->text(tx, 2, 0xffffffL, "dream believe receive    live your dreams    SEA OF DREAMS", subpix);
+  output->text(tx, 2, OVERLAY_C, "dream believe receive    live your dreams    SEA OF DREAMS", subpix);
   //screen->add_subpix(10, 0, 0xffffffL, subpix);
 
   return output;
