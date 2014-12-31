@@ -35,7 +35,7 @@ void setup_animation() {
 }
 
 void draw_frame(ScreenBuffer *screen, int frame) {
-	set_frame_rate(25);
+	set_frame_rate(15);
 	screen->blank();
 
 	while (stars.size() < 30) {

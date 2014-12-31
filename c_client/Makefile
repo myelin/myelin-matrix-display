@@ -30,7 +30,16 @@ $(PROJECTS): %: %.cpp $(CFILES) $(DEPS)
 	python preprocess.py $<
 	g++ $(CFLAGS) -g -o $@ $< $(CFILES)
 
-push:
+send_files:
 	make clean
 	rsync -vrz . pi:c_client/
+
+push: send_files
 	ssh pi 'cd c_client && make'
+
+push_ripples: send_files
+	ssh pi 'cd c_client && make clean && make ripples && sudo /etc/init.d/myelin_matrix_display restart'
+
+push_starfield: send_files
+	ssh pi 'cd c_client && make clean && make starfield && sudo /etc/init.d/myelin_matrix_display restart'
+

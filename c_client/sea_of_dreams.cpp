@@ -17,7 +17,12 @@ ScreenBuffer *SeaOfDreamsOverlay::overlay(ScreenBuffer *screen, int frame) {
   }
   double subpix = 1.0 - (double)(frame % FRAMES_PER_PIXEL) / FRAMES_PER_PIXEL;
   //printf("%f\n", subpix);
-  output->text(tx, 2, OVERLAY_C, "dream believe receive    live your dreams    SEA OF DREAMS", subpix);
+  if (output->text(tx, 2, OVERLAY_C,
+    "             live your dream             in your dreams             dream believe receive             what's your dream?             dream on             dream big             sea of dreams   ",
+    subpix) < 0)
+  {
+    tx = 0;
+  }
   //screen->add_subpix(10, 0, 0xffffffL, subpix);
 
   return output;
