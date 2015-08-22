@@ -1,6 +1,6 @@
 TARGET=beltdriver
 OFILES=main.o ../attiny85_ws2801/ws2801.o effects.o
-BIN=/Applications/Arduino.app/Contents/Resources/Java/hardware/tools/avr/bin
+BIN=/Applications/Arduino.app/Contents/Java/hardware/tools/avr/bin
 DBIN=../misc
 
 .PHONY: build program default clean
@@ -18,7 +18,5 @@ build: $(OFILES)
 	$(BIN)/avr-objcopy -O ihex -R .eeprom $(TARGET).out $(TARGET).hex
 
 program: build
-	-sudo kextunload /System/Library/Extensions/FTDIUSBSerialDriver.kext
-	avrdude -c ftdi -P ft0 -v -e -p attiny85 -B 1 -Uefuse:w:0xFF:m -Uhfuse:w:0xDA:m -Ulfuse:w:0xF2:m
-	avrdude -c ftdi -P ft0 -v -e -p attiny85 -Uflash:w:$(TARGET).hex
-	sudo kextload /System/Library/Extensions/FTDIUSBSerialDriver.kext
+	avrdude -c usbtiny -v -e -p attiny85 -Uefuse:w:0xFF:m -Uhfuse:w:0xDA:m -Ulfuse:w:0xF2:m
+	avrdude -c usbtiny -v -e -p attiny85 -Uflash:w:$(TARGET).hex

@@ -1,6 +1,6 @@
 /*
- * ATTINY85 code to play random effects - for LED testing.
- * Copyright (C) 2012 Phillip Pearson
+ * ATTINY85 LED belt code
+ * Copyright (C) 2012-2015 Phillip Pearson
  * You may use this under a CC Attribution license.
  */
 
@@ -13,9 +13,9 @@ uint8_t pixel_data[WS2801_BUFFER_LEN];
 
 void setup() {
   ws2801_setup();
+  // for some reason the program hangs if we don't start with this
   memset(pixel_data, 127, WS2801_BUFFER_LEN);
   led_show(pixel_data);
-  while (1); //DEBUG
 }
 
 extern void run_effects();

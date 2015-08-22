@@ -17,7 +17,7 @@
 extern uint8_t* pixel_data;
 
 static void show() {
-  ws2801_show(pixel_data);
+  led_show(pixel_data);
 }
 
 #define delay _delay_ms
@@ -58,6 +58,10 @@ static void rect(unsigned char x0, unsigned char y0, unsigned char x1, unsigned 
 
 static void blank() {
   for (int i = 0; i < N_PIXELS; ++i) point(i, 0);
+}
+
+static void dim(int factor) {
+  for (int i = 0; i < N_PIXELS * 3; ++i) pixel_data[i] = pixel_data[i] * factor / 256;
 }
 
 static void flip() {
@@ -226,10 +230,12 @@ static void chase() {
 }
 
 static void trailchase() {
+  uint8_t r = randbyte(), g = randbyte(), b = randbyte();
   for (int pos = 0; pos < N_PIXELS; ++pos) {
-    point(pos, randbyte(), randbyte(), randbyte());
+    dim(200);
+    point(pos, r, g, b);
     show();
-    delay(20);
+    delay(60);
   }
 }
 
@@ -242,9 +248,10 @@ static void paparazzi() {
 }
 
 void run_effects() {
-	paparazzi();
-  chase();
-  flashes();
+  trailchase();
+  //paparazzi();
+  //chase();
+  //flashes();
   return;
 
   for (int p = 0; p < N_PIXELS; ++p) {
