@@ -1,5 +1,5 @@
 TARGET=beltdriver
-OFILES=main.o ../attiny85_ws2801/ws2801.o effects.o
+OFILES=main.o ../attiny85_ws2801/ws2801.o ../attiny85_led_belt/effects.o
 BIN=/Applications/Arduino.app/Contents/Java/hardware/tools/avr/bin
 DBIN=../misc
 

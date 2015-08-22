@@ -234,6 +234,9 @@ static void trailchase() {
   for (int pos = 0; pos < N_PIXELS; ++pos) {
     dim(200);
     point(pos, r, g, b);
+    for (int gp = 0; gp < N_PIXELS; ++gp) {
+      if (!(rand() % 60)) point(gp, rand() % 32, rand() % 32, rand() % 32);
+    }
     show();
     delay(60);
   }
