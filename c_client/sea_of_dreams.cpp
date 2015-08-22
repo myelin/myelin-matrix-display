@@ -8,8 +8,9 @@ SeaOfDreamsOverlay::SeaOfDreamsOverlay(ScreenBuffer *main) {
 ScreenBuffer *SeaOfDreamsOverlay::overlay(ScreenBuffer *screen, int frame) {
 	screen->copy(output);
 
-//#define OVERLAY_C 0xffffffL
-#define OVERLAY_C 0x808080L
+#define OVERLAY_C 0xffffffL
+//#define OVERLAY_C 0x808080L
+
 #define FRAMES_PER_PIXEL 3
   if (!(frame % FRAMES_PER_PIXEL)) {
     //printf("MOVE\n");

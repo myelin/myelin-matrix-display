@@ -154,6 +154,11 @@ void ScreenBuffer::circle(int cx, int cy, int r, color_t c) {
   }
 }
 
+// number of blank columns between characters printed by text()
+#define CHARACTER_SPACING 2
+// width of the whitespace character (' ')
+#define SPACE_WIDTH 3
+
 int ScreenBuffer::text(int x, int y, color_t c, const char* s, double subpix) {
   // x, y = top left corner of text
   // cx, y = top left corner of the current character
@@ -163,7 +168,7 @@ int ScreenBuffer::text(int x, int y, color_t c, const char* s, double subpix) {
   for (const char* ptr = s; *ptr; ++ptr) {
     //printf("write char %c at %d,%d\n", *ptr, cx, y);
     if (*ptr == ' ') {
-      cx += 4;
+      cx += CHARACTER_SPACING + SPACE_WIDTH;
       continue;
     }
     // find c in font
@@ -190,7 +195,7 @@ int ScreenBuffer::text(int x, int y, color_t c, const char* s, double subpix) {
         //printf("\n");
       }
       //printf("update cx %d + %d\n", cx, rightmost);
-      cx += rightmost + 2;
+      cx += rightmost + 1 + CHARACTER_SPACING;
     }
   }
   return cx;
