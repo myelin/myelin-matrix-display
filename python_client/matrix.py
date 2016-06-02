@@ -15,8 +15,8 @@ def encode(data):
 
 def show(data):
     output = '\x01' + encode(data)
-    #sock.sendto(output, ("127.0.0.1", 58082))
-    sock.sendto(output, ("192.168.1.99", 58082))
+    sock.sendto(output, ("127.0.0.1", 58082))
+    #sock.sendto(output, ("192.168.1.99", 58082))
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
