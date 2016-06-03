@@ -3,9 +3,26 @@ Myelin Matrix Display
 
 http://mx.myel.in/
 
-Copyright (C) 2012 Phillip Pearson
+Copyright (C) 2012-2016 Phillip Pearson
 
-You may use this code under a CC Attribution license.
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Introduction
 ------------
@@ -23,9 +40,9 @@ folder, to control the system from anywhere on the network.
 Current version (2)
 -------------------
 
-A Raspberry Pi (rev 3, 256 MB) is connected via an MX2 board (see
-MX2_remote_control_pcb for schematics and layout) to an nRF24L01+
-radio module and to the WS2801 string.
+A Raspberry Pi B (the original version, with 256 MB of RAM) is
+connected via an MX2 board (see MX2_remote_control_pcb for schematics
+and layout) to an nRF24L01+ radio module and to the WS2801 string.
 
 On powerup, the ATMEGA328P on the MX2 board runs an internal
 animation.  Once the RPi boots, it takes over, resetting the AVR and
@@ -54,9 +71,10 @@ allowing more complex patterns.
 Programming patterns
 --------------------
 
-If you'd like to program patterns for the display, the easiest way is
-to use the acw / acw_emulator code.  Clone the
-[acw](https://github.com/myelin/acw) and
-[acw_emulator](https://github.com/myelin/acw_emulator) repositories
-and install all the required dependencies, then run both, and you
-should see the default animation show in the acw_emulator window.
+If you'd like to program patterns for the display:
+
+- Open and run matrix_simulator/matrix_simulator.pde with Processing
+
+- cd python_client; python matrix.py
+
+- Mess with the examples in python_client and c_client
