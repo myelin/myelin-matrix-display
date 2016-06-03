@@ -16,10 +16,6 @@ import hypermedia.net.*;
 
 import hypermedia.net.*;
 
-// constants
-int Y_AXIS = 1;
-int X_AXIS = 2;
-
 // These are the addressing schemes, which vary with how the sign is constructed.
 // The comments are describing how the pixel addresses are laid out in order.  Keep
 // in mind that if the sign is in vertical mode that the pixels go from top to bottom
@@ -28,26 +24,22 @@ int ADDRESSING_NORMAL = 1;    // 0-256
 int ADDRESSING_FLIPFLOP = 2;  // 0-7, 15-8, 16-23, 31-24...
 int ADDRESSING_HALF = 3;      // 0-7, 128-135, 8-15, 136-143...
 
+// Myelin Matrix Display settings
+int WIDTH  = 25;
+int HEIGHT = 12;
+boolean isRGB = true;
+int ADDRESSING = ADDRESSING_NORMAL;
+boolean VERTICAL = false; // set to false when panels are mounted horizontally
+
+// constants
+int Y_AXIS = 1;
+int X_AXIS = 2;
+
 // Configuration
 int PIXELS_PER_CHANNEL = 8;
 int BOARD_SPACING = 20;
 int CHANNEL_SPACING = 20;
 
-// Want It! matrix display settings
-int ADDRESSING = ADDRESSING_NORMAL;
-int WIDTH  = 25;
-int HEIGHT = 12;
-boolean isRGB = true;
-boolean VERTICAL = false; // set to false when panels are mounted horizontally
-
-/*
-// Disorient ACW settings
-int ADDRESSING = ADDRESSING_FLIPFLOP;
-int WIDTH  = 16;
-int HEIGHT = 16;
-boolean isRGB = true;
-boolean VERTICAL = true; // set to false when panels are mounted horizontally
-*/
 
 // privates
 UDP udp;

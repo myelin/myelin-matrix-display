@@ -2,8 +2,6 @@ import socket, random, time
 sock = socket.socket( socket.AF_INET, # Internet
                       socket.SOCK_DGRAM ) # UDP
 
-WIDTH = 25
-HEIGHT = 12
 PIXEL_SIZE = 3
 
 def encode(data):
@@ -13,22 +11,11 @@ def encode(data):
             output.append(chr(pixel[0]) + chr(pixel[1]) + chr(pixel[2]))
     return ''.join(output)
 
-def show(data):
-    output = '\x01' + encode(data)
-    sock.sendto(output, ("127.0.0.1", 58082))
-    #sock.sendto(output, ("192.168.1.99", 58082))
-
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
-
-def fill(c):
-    return [[c for x in range(WIDTH)] for y in range(HEIGHT)]
-
-def blank():
-    return fill(BLACK)
 
 def random_color():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
@@ -89,34 +76,43 @@ def cmultiply(c, mask):
 def add(c1, c2):
     return (c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2])
 
-def load(fn):
-    pixels = open(fn, 'rb').read()
-    assert len(pixels) == WIDTH * HEIGHT * PIXEL_SIZE
-    data = []
-    row_size = WIDTH * PIXEL_SIZE
-    for y in range(HEIGHT):
-        encoded_row = pixels[y * row_size:(y+1) * row_size]
-        row = []
-        for x in range(WIDTH):
-            row.append((ord(encoded_row[x * PIXEL_SIZE]), ord(encoded_row[x * PIXEL_SIZE + 1]), ord(encoded_row[x * PIXEL_SIZE + 2])))
-        data.append(row)
-    return Frame(data)
-
 class Frame:
-    def __init__(self, data=None):
-        self.width = WIDTH
-        self.height = HEIGHT
+    def __init__(self, width, height, data=None):
+        self.width = width
+        self.height = height
         if data:
             self.data = data
         else:
             self.blank()
+
+    def load(self, fn):
+        pixels = open(fn, 'rb').read()
+        assert len(pixels) == self.width * self.height * PIXEL_SIZE
+        data = []
+        row_size = self.width * PIXEL_SIZE
+        for y in range(self.height):
+            encoded_row = pixels[y * row_size:(y+1) * row_size]
+            row = []
+            for x in range(self.width):
+                row.append((ord(encoded_row[x * PIXEL_SIZE]), ord(encoded_row[x * PIXEL_SIZE + 1]), ord(encoded_row[x * PIXEL_SIZE + 2])))
+            data.append(row)
+        self.data = data
+
     def save(self, fn):
         open(fn, 'wb').write(encode(self.data))
     def copy(self, data):
         if isinstance(data, Frame): data = data.data
         self.data = [row[:] for row in data]
+
+    def make_fill(self, c):
+        return [[c for x in range(self.width)] for y in range(self.height)]
+
+    def make_blank(self):
+        return self.make_fill(BLACK)
+
     def blank(self):
-        self.data = blank()
+        self.data = self.make_blank()
+
     def dim(self, amount):
         self.data = [
             [
@@ -185,29 +181,39 @@ class Frame:
         self.line(x0, y0, x0, y1, c)
         self.line(x1, y0, x1, y1, c)
 
-class Flipper:
-    def __init__(self, frame_rate):
-        self.last = 0
+class Matrix:
+    def __init__(self, ip, width=25, height=12, frame_rate=0):
+        self.ip = ip
+        self.width = width
+        self.height = height
         self.frame_rate = frame_rate
-        self.frame = 0
-    def flip(self, f):
+
+        self.last = 0
+        self.frame_no = 0
+
+    def frame(self):
+        return Frame(self.width, self.height)
+
+    def show(self, f):
         now = time.time()
         print "since last:",now - self.last
         if (now - self.last) < (1.0 / self.frame_rate):
             to_sleep = 1.0 / self.frame_rate - (now - self.last)
             time.sleep(to_sleep)
-        if hasattr(f, 'show'):
-            f.show()
-        else:
-            show(f)
-        self.frame += 1
+
+        self.send_frame(f)
+        self.frame_no += 1
         self.last = time.time()
 
+    def send_frame(self, f):
+        output = '\x01' + encode(f.data)
+        print "sending %d bytes" % len(output)
+        sock.sendto(output, (self.ip, 58082))
+
 if __name__ == '__main__':
-    flipper = Flipper(50)
-    f = Frame()
-    def flip():
-        flipper.flip(f)
+    mx = Matrix('127.0.0.1', 25, 12, 50)
+    f = mx.frame()
+
     n = 0
     while 1:
         n += 1
@@ -217,10 +223,10 @@ if __name__ == '__main__':
             2: f.box,
             }[n % 3]
         #func = f.box
-        func(random.randint(0, WIDTH-1), random.randint(0, HEIGHT-1), random.randint(0, WIDTH-1), random.randint(0, HEIGHT-1), random_color())
-        flip()
+        func(random.randint(0, f.width-1), random.randint(0, f.height-1), random.randint(0, f.width-1), random.randint(0, f.height-1), random_color())
+        mx.show(f)
         for x in range(10):
-            flip()
+            mx.show(f)
         for x in range(20):
             f.dim(0.8)
-            flip()
+            mx.show(f)
