@@ -1,4 +1,4 @@
-import socket, random, time
+import socket, random, time, six
 sock = socket.socket( socket.AF_INET, # Internet
                       socket.SOCK_DGRAM ) # UDP
 
@@ -16,6 +16,9 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+
+def is_string(s):
+    return isinstance(s, six.string_types)
 
 def random_color():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
@@ -182,8 +185,14 @@ class Frame:
         self.line(x1, y0, x1, y1, c)
 
 class Matrix:
-    def __init__(self, ip, width=25, height=12, frame_rate=0):
-        self.ip = ip
+    def __init__(self, ips, width=25, height=12, frame_rate=0):
+        self.ips = []
+        for ip in ([ips] if is_string(ips) else ips):
+            if ip.find(":") != -1:
+                ip, port = ip.split(":", 1)
+            else:
+                port = 58082 # default matrix display port
+            self.ips.append((ip, int(port)))
         self.width = width
         self.height = height
         self.frame_rate = frame_rate
@@ -208,7 +217,8 @@ class Matrix:
     def send_frame(self, f):
         output = '\x01' + encode(f.data)
         print "sending %d bytes" % len(output)
-        sock.sendto(output, (self.ip, 58082))
+        for dest_host in self.ips:
+            sock.sendto(output, dest_host)
 
 if __name__ == '__main__':
     mx = Matrix('127.0.0.1', 25, 12, 50)
