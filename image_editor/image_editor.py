@@ -16,11 +16,11 @@ w/a/s/d - shift entire canvas"""
     FRAME_RATE = 50
     x = y = 0
     colour = [255, 255, 255]
+    mx = matrix.Matrix('127.0.0.1', 25, 12, 50)
+    image = mx.frame()
+    f = mx.frame()
     if os.path.exists(fn):
-        image = matrix.load(fn)
-    else:
-        image = matrix.Frame()
-    f = matrix.Frame()
+        image.load(fn)
     frame = 0
     input = []
 
@@ -81,7 +81,7 @@ w/a/s/d - shift entire canvas"""
         f.copy(image)
         # draw cursor
         f.point(x, y, matrix.multiply(colour, 0.5 * math.sin(float(frame) / FRAME_RATE * math.pi) + 0.5))
-        f.show()
+        mx.show(f)
         time.sleep(1.0 / FRAME_RATE)
 
 if __name__ == '__main__':
