@@ -1,9 +1,5 @@
-# I assume this was some kind of clock mode?  doesn't work for me any
-# more -- I think I'm running a different PIL version that changes the
-# libraries around. --PP, Dec 2014
-
 import matrix
-import Image, ImageFont, ImageDraw
+from PIL import Image, ImageFont, ImageDraw
 import time
 
 def m(c):
@@ -18,8 +14,8 @@ def map_colour(c):
     return c
     return (m(c[0]), m(c[1]), m(c[2]))
 
-f = matrix.Frame()
-flipper = matrix.Flipper(50)
+mx = matrix.Matrix('127.0.0.1', 25, 12, 50)
+f = mx.frame()
 
 image = Image.new("RGBA", (25, 12))
 draw = ImageDraw.Draw(image)
@@ -37,4 +33,4 @@ while 1:
     c = int(time.strftime("%S"))
     print c
     f.point(0, 0, (c, c, c))
-    flipper.flip(f)
+    mx.show(f)
