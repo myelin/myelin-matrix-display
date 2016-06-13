@@ -10,7 +10,7 @@ def main():
     mx = matrix.Matrix('127.0.0.1', 25, 12, 50)
     f = mx.frame()
     def flip():
-        mx.show(f)
+        mx.show()
 
     def draw_offset_mult(offset, blend, mult, mask):
         for y in range(min(f.height, pic.size[1])):

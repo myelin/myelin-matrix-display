@@ -1,15 +1,18 @@
-import socket, random, time, six
+import errno, socket, random, time, six, traceback
 sock = socket.socket( socket.AF_INET, # Internet
                       socket.SOCK_DGRAM ) # UDP
 
 PIXEL_SIZE = 3
 
 def encode(data):
+#    print `data`
     output = []
     for row in data:
         for pixel in row:
             output.append(chr(pixel[0]) + chr(pixel[1]) + chr(pixel[2]))
-    return ''.join(output)
+    r = ''.join(output)
+#    print len(r)
+    return r
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -20,8 +23,8 @@ BLUE = (0, 0, 255)
 def is_string(s):
     return isinstance(s, six.string_types)
 
-def random_color():
-    return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+def random_color(brightness=255):
+    return (random.randint(0, brightness), random.randint(0, brightness), random.randint(0, brightness))
 
 # * wheel(0-767) generates an approximate rainbow.  Based on Wheel()
 # * from the Adafruit_WS2801 library, which requires the following
@@ -80,6 +83,148 @@ def add(c1, c2):
     return (c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2])
 
 class Frame:
+
+    def blank(self):
+        self.fill(BLACK)
+
+    def fill(self, c):
+        self.data = self.make_fill(c)
+
+    def get(self, x, y):
+        return self.data[y][x]
+
+    def point(self, x, y, c):
+        #print "point %d, %d" % (x, y)
+        self.data[y][x] = c
+
+    def dim(self, amount):
+        self.data = [
+            [
+                (int(c[0] * amount), int(c[1] * amount), int(c[2] * amount))
+                for c in row
+            ] for row in self.data
+        ]
+
+    def subtract(self, amount):
+        self.data = [
+            [
+                (max(0, c[0] - amount), max(0, c[1] - amount), max(0, c[2] - amount))
+                for c in row
+            ] for row in self.data
+        ]
+
+def coord_mapping(row_lengths):
+    mapping = {}
+    n = 0
+    for y in range(len(row_lengths)):
+        for x in range(row_lengths[y]):
+            mapping[n] = (x, y)
+            n += 1
+    print mapping
+    return mapping
+
+#    0      0 1 2 3
+#    1     0 1 2 3 4
+#    2    0 1 2 3 4 5
+#    3   0 1 2 3 4 5 6
+#    4    0 1 2 3 4 5
+#    5     0 1 2 3 4
+#    6      0 1 2 3
+
+class HexagonFrame(Frame):
+    ROW_LENGTHS = [4, 5, 6, 7, 6, 5, 4]
+
+    ID_MAPPING = coord_mapping(ROW_LENGTHS)
+
+    SPIRAL_MAPPING = {
+        0: (0, 0),
+        1: (1, 0),
+        2: (2, 0),
+        3: (3, 0),
+        4: (4, 1),
+        5: (5, 2),
+        6: (6, 3),
+        7: (5, 4),
+        8: (4, 5),
+        9: (3, 6),
+        10: (2, 6),
+        11: (1, 6),
+        12: (0, 6),
+        13: (0, 5),
+        14: (0, 4),
+        15: (0, 3),
+        16: (0, 2),
+        17: (0, 1),
+        18: (1, 1),
+        19: (2, 1),
+        20: (3, 1),
+        21: (4, 2),
+        22: (5, 3),
+        23: (4, 4),
+        24: (3, 5),
+        25: (2, 5),
+        26: (1, 5),
+        27: (1, 4),
+        28: (1, 3),
+        29: (1, 2),
+        30: (2, 2),
+        31: (3, 2),
+        32: (4, 3),
+        33: (3, 4),
+        34: (2, 4),
+        35: (2, 3),
+        36: (3, 3),
+        }
+
+    def __init__(self):
+        self.blank()
+
+    def linear_point(self, x, c):
+        x, y = HexagonFrame.ID_MAPPING[x]
+        self.point(x, y, c)
+
+    def spiral_point(self, x, c):
+        x, y = HexagonFrame.SPIRAL_MAPPING[x]
+        self.point(x, y, c)
+
+    def make_fill(self, c):
+        return [
+            [c] * 4,
+            [c] * 5,
+            [c] * 6,
+            [c] * 7,
+            [c] * 6,
+            [c] * 5,
+            [c] * 4,
+            ]
+
+    def ring(self, r, c):
+        # r=0: center
+        # r=3: outer ring
+        if r == 0:
+            self.point(3, 3, c)
+        elif r == 1:
+            for y in (2, 4):
+                for x in (2, 3): self.point(x, y, c)
+            for x in (2, 4): self.point(x, 3, c)
+        elif r == 2:
+            for y in (1, 5):
+                for x in (1, 2, 3): self.point(x, y, c)
+            for y in (2, 4):
+                for x in (1, 4): self.point(x, y, c)
+            for x in (1, 5): self.point(x, 3, c)
+        elif r == 3:
+            for y in (0, 6):
+                for x in (0, 1, 2, 3): self.point(x, y, c)
+            for y in (1, 5):
+                for x in (0, 4): self.point(x, y, c)
+            for y in (2, 4):
+                for x in (0, 5): self.point(x, y, c)
+            for x in (0, 6): self.point(x, 3, c)
+        else:
+            raise Exception("bad radius %d" % r)
+
+class RectangleFrame(Frame):
     def __init__(self, width, height, data=None):
         self.width = width
         self.height = height
@@ -110,26 +255,6 @@ class Frame:
     def make_fill(self, c):
         return [[c for x in range(self.width)] for y in range(self.height)]
 
-    def make_blank(self):
-        return self.make_fill(BLACK)
-
-    def blank(self):
-        self.data = self.make_blank()
-
-    def dim(self, amount):
-        self.data = [
-            [
-                (int(c[0] * amount), int(c[1] * amount), int(c[2] * amount))
-                for c in row
-            ] for row in self.data
-        ]
-    def subtract(self, amount):
-        self.data = [
-            [
-                (max(0, c[0] - amount), max(0, c[1] - amount), max(0, c[2] - amount))
-                for c in row
-            ] for row in self.data
-        ]
     def translate(self, xd, yd):
         self.data = [
             [
@@ -137,14 +262,7 @@ class Frame:
                 for x in range(self.width)
             ] for y in range(self.height)
         ]
-    def show(self):
-        show(self.data)
-    def fill(self, c):
-        self.data = fill(c)
-    def get(self, x, y):
-        return self.data[y][x]
-    def point(self, x, y, c):
-        self.data[y][x] = c
+
     def rect(self, x0, y0, x1, y1, c):
         if x1 < x0: x0, x1 = x1, x0
         if y1 < y0: y0, y1 = y1, y0
@@ -153,6 +271,7 @@ class Frame:
             row = self.data[y]
             for x in range(x0, x1+1):
                 row[x] = c
+
     def line(self, x0, y0, x1, y1, c):
         # line runs from (x0, y0)-(x1, y1)
         # this is not very smart about diagonal lines; sometimes it will miss the ends.  a better line algo would be welcome!
@@ -178,6 +297,7 @@ class Frame:
             for x in range(x0, x1+1):
                 y = (x - x0) * (y1 + 1 - y0) / (x1 + 1 - x0) + y0
                 self.point(x, y, c)
+
     def box(self, x0, y0, x1, y1, c):
         self.line(x0, y0, x1, y0, c)
         self.line(x0, y1, x1, y1, c)
@@ -185,7 +305,7 @@ class Frame:
         self.line(x1, y0, x1, y1, c)
 
 class Matrix:
-    def __init__(self, ips, width=25, height=12, frame_rate=0):
+    def __init__(self, ips, width=None, height=None, frame_rate=30):
         self.ips = []
         for ip in ([ips] if is_string(ips) else ips):
             if ip.find(":") != -1:
@@ -200,25 +320,46 @@ class Matrix:
         self.last = 0
         self.frame_no = 0
 
-    def frame(self):
-        return Frame(self.width, self.height)
+        self.chain = []
+        if self.width and self.height:
+            self.chain.append(RectangleFrame(self.width, self.height))
 
-    def show(self, f):
+    def frame(self, idx=0):
+        return self.chain[idx]
+
+    def add_frame(self, f):
+        self.chain.append(f)
+        return f
+
+    def show(self):
         now = time.time()
-        print "since last:",now - self.last
+        print "[%d] since last: %.6f" % (self.frame_no, now - self.last)
         if (now - self.last) < (1.0 / self.frame_rate):
             to_sleep = 1.0 / self.frame_rate - (now - self.last)
             time.sleep(to_sleep)
 
-        self.send_frame(f)
+        self.send_frame()
         self.frame_no += 1
         self.last = time.time()
 
-    def send_frame(self, f):
-        output = '\x01' + encode(f.data)
-        print "sending %d bytes" % len(output)
+    def format_packet(self, data):
+        return '\x01' + data
+
+    def send_frame(self):
+        output = self.format_packet(''.join(encode(f.data) for f in self.chain))
+        #print "sending %d bytes" % len(output)
         for dest_host in self.ips:
-            sock.sendto(output, dest_host)
+            try:
+                sock.sendto(output, dest_host)
+            except socket.error, e:
+                if e.errno == errno.EHOSTDOWN:
+                    print "\tEHOSTDOWN sending to %s" % `dest_host`
+                else:
+                    traceback.print_exc()
+
+class RawMatrix(Matrix):
+    def format_packet(self, data):
+        return data
 
 if __name__ == '__main__':
     mx = Matrix('127.0.0.1', 25, 12, 50)
@@ -234,9 +375,9 @@ if __name__ == '__main__':
             }[n % 3]
         #func = f.box
         func(random.randint(0, f.width-1), random.randint(0, f.height-1), random.randint(0, f.width-1), random.randint(0, f.height-1), random_color())
-        mx.show(f)
+        mx.show()
         for x in range(10):
-            mx.show(f)
+            mx.show()
         for x in range(20):
             f.dim(0.8)
-            mx.show(f)
+            mx.show()

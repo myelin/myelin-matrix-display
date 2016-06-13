@@ -1,3 +1,5 @@
+# this script outputs random frames to two 8x8 matrixes (with hardcoded ip addresses)
+
 import random
 import matrix
 
