@@ -240,7 +240,7 @@ void receive(byte[] data, String ip, int port) {
         println("Packet size mismatch. Expected 257, got " + data.length);
     }
 
-    for (int i=1; i<data.length; i++) {
+    for (int i=1; i<data.length && i<state.length; i++) {
       state[i-1] = convertByte(data[i]);
     }
   }
