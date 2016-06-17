@@ -84,6 +84,9 @@ def add(c1, c2):
 
 class Frame:
 
+    def __init__(self):
+        self.blank()
+
     def blank(self):
         self.fill(BLACK)
 
