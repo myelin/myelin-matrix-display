@@ -32,14 +32,14 @@ $(PROJECTS): %: %.cpp $(CFILES) $(DEPS)
 
 send_files:
 	make clean
-	rsync -vrz . pi:c_client/
+	rsync -vrz . mx2:c_client/
 
 push: send_files
-	ssh pi 'cd c_client && make'
+	ssh mx2 'cd c_client && make'
 
 push_ripples: send_files
-	ssh pi 'cd c_client && make clean && make ripples && sudo /etc/init.d/myelin_matrix_display restart'
+	ssh mx2 'cd c_client && make clean && make ripples && sudo /etc/init.d/myelin_matrix_display restart'
 
 push_starfield: send_files
-	ssh pi 'cd c_client && make clean && make starfield && sudo /etc/init.d/myelin_matrix_display restart'
+	ssh mx2 'cd c_client && make clean && make starfield && sudo /etc/init.d/myelin_matrix_display restart'
 

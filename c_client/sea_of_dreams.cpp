@@ -19,8 +19,8 @@ ScreenBuffer *SeaOfDreamsOverlay::overlay(ScreenBuffer *screen, int frame) {
   double subpix = 1.0 - (double)(frame % FRAMES_PER_PIXEL) / FRAMES_PER_PIXEL;
   //printf("%f\n", subpix);
   if (output->text(tx, 2, OVERLAY_C,
-		   //    "             all you need is love             phil & brittany             .             .             .             .             .   ",
-    "   love   ",
+		"             all you need is love             phil & brittany 6/17/2016                                                                         ",
+    // "   love   ",
     subpix) < 0)
   {
     tx = 0;

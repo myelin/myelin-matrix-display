@@ -14,7 +14,7 @@ matrix.sock.setblocking(0)
 
 frame_rate = 20
 brightness = 32
-mx = matrix.RawMatrix(['127.0.0.1', '192.168.1.210:6454'], 8, 8, frame_rate)
+mx = matrix.RawMatrix(['127.0.0.1', '192.168.0.81:6454'], 8, 8, frame_rate)
 sq = mx.frame() # 8x8 square at the start of the chain
 hexs = [mx.add_frame(matrix.HexagonFrame()) for i in range(7)]
 
