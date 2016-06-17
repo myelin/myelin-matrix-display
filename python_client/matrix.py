@@ -134,6 +134,17 @@ def coord_mapping(row_lengths):
 #    5     0 1 2 3 4
 #    6      0 1 2 3
 
+
+class HeartFrame(Frame):
+    """
+    """
+
+    def make_fill(self, c):
+        return [
+            [c] * 24,
+            ]
+
+
 class HexagonFrame(Frame):
     ROW_LENGTHS = [4, 5, 6, 7, 6, 5, 4]
 
