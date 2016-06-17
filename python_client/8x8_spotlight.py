@@ -3,7 +3,7 @@
 import random
 import matrix
 
-mx = matrix.Matrix(['192.168.0.84:6454'], 8, 8, 50)
+mx = matrix.Matrix(['192.168.0.84:6454','192.168.0.83:6454'], 8, 8, 50)
 f = mx.frame()
 
 n = 0
