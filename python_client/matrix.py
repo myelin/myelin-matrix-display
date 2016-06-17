@@ -238,6 +238,26 @@ class HexagonFrame(Frame):
         else:
             raise Exception("bad radius %d" % r)
 
+class RingFrame(Frame):
+    ROW_LENGTHS = [11, 10, 9, 7]
+
+    ID_MAPPING = coord_mapping(ROW_LENGTHS)
+
+    def __init__(self):
+        self.blank()
+
+    def linear_point(self, x, c):
+        x, y = RingFrame.ID_MAPPING[x]
+        self.point(x, y, c)
+
+    def make_fill(self, c):
+        return [
+            [c] * 11,
+            [c] * 10,
+            [c] * 9,
+            [c] * 7,
+            ]
+
 class RectangleFrame(Frame):
     def __init__(self, width, height, data=None):
         self.width = width
