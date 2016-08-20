@@ -1,4 +1,4 @@
-SEA_OF_DREAMS=1
+#SEA_OF_DREAMS=1
 
 MACHINE = $(shell uname -m)
 ifeq ($(MACHINE), armv6l)

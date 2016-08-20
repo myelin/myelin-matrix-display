@@ -3,15 +3,15 @@
 import random
 import matrix
 
-mx = matrix.Matrix(['192.168.0.84:6454','192.168.0.83:6454'], 8, 8, 50)
+mx = matrix.Matrix(['192.168.0.84:6454','192.168.0.83:6454'], 8, 8, 40)
 f = mx.frame()
 
 n = 0
 f.dim(0)
-f.subtract(-100)
+f.subtract(-65)
 while 1:
     n += 1
-    multiplier = ((n / 20) % 2) * 0.03 + 0.99
+    multiplier = ((n / 20) % 2) * 0.04 + 0.99
     print multiplier
     f.dim(multiplier)
 #    f.dim(0.7)

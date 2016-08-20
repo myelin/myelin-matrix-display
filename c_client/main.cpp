@@ -16,12 +16,36 @@ void setup_display() {
   }
 }
 
+#define ESTIMATE_POWER_USAGE
+
 void send_to_display(ScreenBuffer* buffer) {
   // reformat buffer
   int packet_size = buffer->buf_size() + 1;
   unsigned char output[packet_size];
+  const unsigned char* pixels = buffer->pixels();
   output[0] = 1; // protocol header
-  memcpy(output + 1, buffer->pixels(), packet_size - 1); // ADDRESSING_HORIZONTAL_NORMAL
+  memcpy(output + 1, pixels, packet_size - 1); // ADDRESSING_HORIZONTAL_NORMAL
+
+#ifdef ESTIMATE_POWER_USAGE
+  uint32_t total_brightness = 0;
+  for (int i = 0; i < buffer->buf_size(); ++i) {
+    total_brightness += pixels[i];
+  }
+  int max_brightness = buffer->buf_size() * 256;
+  float percentage = (float)total_brightness * 100.0 / max_brightness;
+  float active_milliamps = (float)total_brightness / 256.0 * 20.0;
+  float idle_milliamps = (float)buffer->buf_size() / 3.0 * 1.5;
+  float milliamps = active_milliamps + idle_milliamps;
+  printf("total brightness %d/%d (%.1f%%); estimated power usage %.2f mA idle + %.2f mA active = %.2f mA @ 5V (%.2f W)\n",
+	 total_brightness,
+	 max_brightness,
+	 percentage,
+	 idle_milliamps,
+	 active_milliamps,
+	 milliamps,
+	 milliamps * 5 / 1000
+	 );
+#endif
 
   // set output address
   struct sockaddr_in addr;
