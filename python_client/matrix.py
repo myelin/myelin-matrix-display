@@ -396,7 +396,7 @@ class RawMatrix(Matrix):
         return data
 
 if __name__ == '__main__':
-    mx = Matrix('127.0.0.1', 25, 12, 50)
+    mx = Matrix('127.0.0.1', 25, 12, 30)
     f = mx.frame()
 
     n = 0
