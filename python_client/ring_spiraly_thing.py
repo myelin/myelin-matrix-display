@@ -1,4 +1,6 @@
-# this script outputs random stuff to seven 36-led hexagons attached to an 8x8 matrix
+# This script outputs random stuff to four 37-led quarter circle boards attached to an 8x8 matrix
+# by Matt Stephenson, June 17, 2016, for Phil & Brittany's wedding
+
 
 import matrix
 from matrix import random_color
@@ -9,13 +11,13 @@ import socket
 import time
 import traceback
 
-LOG = open("hexagons.log", "w")
+LOG = open("circles.log", "w")
 matrix.sock.setblocking(0)
 
 frame_rate = 20
 brightness = 20
 tracelength = 3*37.0
-mx = matrix.RawMatrix(['127.0.0.1', '192.168.0.82:6454'], 11, 4, frame_rate)
+mx = matrix.RawMatrix(['127.0.0.1', 'esp-circles.local:6454'], 8, 8, frame_rate)
 sq = mx.frame() # 8x8 square at the start of the chain
 ring_segments = [mx.add_frame(matrix.RingFrame()) for i in range(4)]
 hex_rgb_constants = [[0.2,0.9,0.9],[1,0.3,0.3],[0,0,1],[0.9,0,1]]

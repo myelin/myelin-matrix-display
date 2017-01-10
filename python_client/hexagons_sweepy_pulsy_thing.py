@@ -1,4 +1,6 @@
-# this script outputs random stuff to seven 36-led hexagons attached to an 8x8 matrix
+# This script outputs random stuff to seven 36-led hexagons attached to an 8x8 matrix
+# by Matt Stephenson, June 17, 2016, for Phil & Brittany's wedding
+
 
 import matrix
 from matrix import random_color
@@ -15,7 +17,7 @@ matrix.sock.setblocking(0)
 frame_rate = 20
 brightness = 20
 tracelength = 3*37.0
-mx = matrix.RawMatrix(['127.0.0.1', '192.168.0.81:6454'], 8, 8, frame_rate)
+mx = matrix.RawMatrix(['127.0.0.1', 'esp-hexagons:6454'], 8, 8, frame_rate)
 sq = mx.frame() # 8x8 square at the start of the chain
 hexs = [mx.add_frame(matrix.HexagonFrame()) for i in range(7)]
 hex_rgb_constants = [[0.2,0.9,0.9],[0.8,0.8,0.3],[0.3,0.7,0.0],[1,0.3,0.3],[0,0,1],[0.8,0.8,0.9],[0.9,0,1]]

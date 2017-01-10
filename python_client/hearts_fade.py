@@ -1,6 +1,8 @@
-# this script outputs random stuff to seven 36-led hexagons attached to an 8x8 matrix
+# this script outputs random stuff to seven 24-led hearts attached to an 8x8 matrix
+# by Philip Lindsay, June 17, 2016, for Phil & Brittany's wedding
 
-TARGET_IP_ADDRESS = '192.168.0.80'
+
+TARGET_IP_ADDRESS = 'esp-hearts.local'
 
 import matrix
 from matrix import random_color
@@ -11,7 +13,7 @@ import socket
 import time
 import traceback
 
-LOG = open("hexagons.log", "w")
+LOG = open("hearts.log", "w")
 matrix.sock.setblocking(0)
 
 frame_rate = 20
